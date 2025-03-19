@@ -13,8 +13,12 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <UtensilsCrossed className="h-8 w-8 text-amber-400" />
-            <span className="ml-2 text-xl font-bold">Blue Whale</span>
+          <img 
+    src="https://freeimage.host/i/3xXrzru" 
+    alt="Blue Whale Logo" 
+    className="h-8 w-8" 
+  />
+  <span className="text-xl font-bold">Blue Whale Asian</span>
           </div>
 
           {/* Desktop Menu */}

@@ -50,7 +50,7 @@ const AdminLayout = () => {
         <div className="p-4">
         <div className="flex items-center space-x-2">
   <img 
-    src="src/BlueWhale-Final-logo.png" 
+    src="https://freeimage.host/i/3xXrzru" 
     alt="Blue Whale Logo" 
     className="h-8 w-8" 
   />
