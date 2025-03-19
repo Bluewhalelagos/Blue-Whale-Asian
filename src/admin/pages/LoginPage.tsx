@@ -32,10 +32,14 @@ const LoginPage = () => {
     <div className="min-h-screen bg-blue-900 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <div className="flex items-center space-x-2">
-            <UtensilsCrossed className="h-10 w-10 text-amber-400" />
-            <span className="text-2xl font-bold text-blue-900">Blue Whale Admin</span>
-          </div>
+        <div className="flex items-center space-x-2">
+  <img 
+    src="BlueWhale-Final-logo.png" 
+    alt="Blue Whale Logo" 
+    className="h-8 w-8" 
+  />
+  <span className="text-xl font-bold">Blue Whale Admin</span>
+</div>
         </div>
 
         {error && (

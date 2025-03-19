@@ -48,10 +48,14 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <div className="w-64 bg-blue-900 text-white">
         <div className="p-4">
-          <div className="flex items-center space-x-2">
-            <UtensilsCrossed className="h-8 w-8 text-amber-400" />
-            <span className="text-xl font-bold">Blue Whale Admin</span>
-          </div>
+        <div className="flex items-center space-x-2">
+  <img 
+    src="BlueWhale-Final-logo.png" 
+    alt="Blue Whale Logo" 
+    className="h-8 w-8" 
+  />
+  <span className="text-xl font-bold">Blue Whale Admin</span>
+</div>
         </div>
         <nav className="mt-8">
           {menuItems.map((item, index) => (
