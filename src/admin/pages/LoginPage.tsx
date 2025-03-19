@@ -34,7 +34,7 @@ const LoginPage = () => {
         <div className="flex justify-center mb-8">
         <div className="flex items-center space-x-2">
   <img 
-    src="BlueWhale-Final-logo.png" 
+    src="./BlueWhale-Final-logo.png" 
     alt="Blue Whale Logo" 
     className="h-8 w-8" 
   />
