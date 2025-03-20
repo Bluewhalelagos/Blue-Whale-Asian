@@ -6,7 +6,9 @@ import {
   Truck,
   TrendingUp,
   Eye,
-  X
+  X,
+  Clock,
+  Store
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -18,7 +20,17 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { db } from '../../firebase/config';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  limit, 
+  doc, 
+  getDoc, 
+  updateDoc,
+  setDoc 
+} from 'firebase/firestore';
 
 interface Contact {
   id: string;
@@ -37,11 +49,25 @@ interface Reservation {
   status: 'pending' | 'approved' | 'cancelled';
 }
 
+interface RestaurantStatus {
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
+  lastUpdated: string;
+}
+
 const DashboardPage = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
+    isOpen: true,
+    openTime: '11:00 AM',
+    closeTime: '10:00 PM',
+    lastUpdated: new Date().toISOString()
+  });
   const [stats, setStats] = useState({
     reservations: 0,
     menuItems: 48,
@@ -78,6 +104,15 @@ const DashboardPage = () => {
         })) as Reservation[];
         setReservations(reservationsList);
 
+        // Fetch restaurant status
+        const statusDoc = await getDoc(doc(db, 'settings', 'restaurantStatus'));
+        if (statusDoc.exists()) {
+          setRestaurantStatus(statusDoc.data() as RestaurantStatus);
+        } else {
+          // Create the document if it doesn't exist
+          await setDoc(doc(db, 'settings', 'restaurantStatus'), restaurantStatus);
+        }
+
         // Update stats
         setStats(prev => ({
           ...prev,
@@ -93,6 +128,49 @@ const DashboardPage = () => {
 
     fetchData();
   }, []);
+
+  const toggleRestaurantStatus = async () => {
+    setIsUpdating(true);
+    try {
+      const updatedStatus = {
+        ...restaurantStatus,
+        isOpen: !restaurantStatus.isOpen,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Update in Firestore
+      await updateDoc(doc(db, 'settings', 'restaurantStatus'), updatedStatus);
+      
+      // Update local state
+      setRestaurantStatus(updatedStatus);
+    } catch (error) {
+      console.error('Error updating restaurant status:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const updateRestaurantHours = async (openTime: string, closeTime: string) => {
+    setIsUpdating(true);
+    try {
+      const updatedStatus = {
+        ...restaurantStatus,
+        openTime,
+        closeTime,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Update in Firestore
+      await updateDoc(doc(db, 'settings', 'restaurantStatus'), updatedStatus);
+      
+      // Update local state
+      setRestaurantStatus(updatedStatus);
+    } catch (error) {
+      console.error('Error updating restaurant hours:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const statsCards = [
     { 
@@ -131,6 +209,75 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* Restaurant Status Control */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <Store className="h-5 w-5 mr-2" />
+            Restaurant Status
+          </h2>
+          <span className="text-sm text-gray-500">
+            Last updated: {new Date(restaurantStatus.lastUpdated).toLocaleString()}
+          </span>
+        </div>
+        
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center">
+            <div className={`h-14 w-14 rounded-full flex items-center justify-center ${
+              restaurantStatus.isOpen 
+                ? 'bg-gradient-to-r from-green-400 to-green-600' 
+                : 'bg-gradient-to-r from-red-400 to-red-600'
+            } mr-4`}>
+              <Clock className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <p className="text-xl font-semibold">
+                {restaurantStatus.isOpen ? 'Restaurant is Open' : 'Restaurant is Closed'}
+              </p>
+              <p className="text-sm text-gray-600">
+                Hours: {restaurantStatus.openTime} - {restaurantStatus.closeTime}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="flex space-x-2 w-full md:w-auto">
+              <input 
+                type="time" 
+                className="rounded border border-gray-300 px-2 py-1"
+                value={restaurantStatus.openTime.split(' ')[0]}
+                onChange={(e) => {
+                  const newTime = e.target.value + ' AM';
+                  updateRestaurantHours(newTime, restaurantStatus.closeTime);
+                }}
+              />
+              <span className="self-center">-</span>
+              <input 
+                type="time" 
+                className="rounded border border-gray-300 px-2 py-1"
+                value={restaurantStatus.closeTime.split(' ')[0]}
+                onChange={(e) => {
+                  const newTime = e.target.value + ' PM';
+                  updateRestaurantHours(restaurantStatus.openTime, newTime);
+                }}
+              />
+            </div>
+            
+            <button
+              onClick={toggleRestaurantStatus}
+              disabled={isUpdating}
+              className={`${
+                restaurantStatus.isOpen 
+                  ? 'bg-red-500 hover:bg-red-600' 
+                  : 'bg-green-500 hover:bg-green-600'
+              } text-white py-2 px-4 rounded-lg transition-colors duration-200 min-w-32`}
+            >
+              {isUpdating ? 'Updating...' : restaurantStatus.isOpen ? 'Mark as Closed' : 'Mark as Open'}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsCards.map((stat, index) => (

@@ -9,13 +9,13 @@ import {
   SortingState,
   getFilteredRowModel,
 } from '@tanstack/react-table';
-import { Check, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Check, X, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import { db } from '../../firebase/config';
 import { collection, query, orderBy, getDocs, doc, updateDoc, where } from 'firebase/firestore';
 
 interface Reservation {
-  id: string;          // This will be Firestore's document ID
-  reservationId: string; // This will be your custom ID (reservation1, etc.)
+  id: string;
+  reservationId: string;
   name: string;
   email: string;
   phone: string;
@@ -23,6 +23,10 @@ interface Reservation {
   time: string;
   persons: string;
   status: 'pending' | 'approved' | 'cancelled';
+  specialRequests?: string;
+  occasion?: string;
+  preferredSeating?: string;
+  createdAt?: string;
 }
 
 const columnHelper = createColumnHelper<Reservation>();
@@ -33,6 +37,8 @@ const ReservationsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const fetchReservations = async (date?: Date) => {
     setIsLoading(true);
@@ -60,9 +66,9 @@ const ReservationsPage = () => {
 
       const snapshot = await getDocs(reservationsQuery);
       const reservationsList = snapshot.docs.map(doc => ({
-        id: doc.id,  // Store Firestore's document ID
+        id: doc.id,
         ...doc.data(),
-        reservationId: doc.data().id || 'unknown'  // Store your custom ID as reservationId
+        reservationId: doc.data().reservationId || 'unknown'
       })) as Reservation[];
       
       setReservations(reservationsList);
@@ -122,13 +128,18 @@ const ReservationsPage = () => {
     }
   };
 
+  const viewReservationDetails = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setShowDetailModal(true);
+  };
+
   const columns = [
-    columnHelper.accessor('reservationId', {  // Changed from 'id' to 'reservationId'
-      header: 'Reservation ID',
+    columnHelper.accessor('reservationId', {
+      header: 'ID',
       cell: info => info.getValue(),
     }),
     columnHelper.accessor('name', {
-      header: 'Customer Name',
+      header: 'Customer',
       cell: info => info.getValue(),
     }),
     columnHelper.accessor('date', {
@@ -147,14 +158,14 @@ const ReservationsPage = () => {
     }),
     columnHelper.accessor('persons', {
       header: 'Guests',
-      cell: info => info.getValue(),
+      cell: info => (
+        <span className={parseInt(info.getValue()) > 6 ? 'font-bold text-amber-600' : ''}>
+          {info.getValue()}
+        </span>
+      ),
     }),
     columnHelper.accessor('phone', {
       header: 'Phone',
-      cell: info => info.getValue(),
-    }),
-    columnHelper.accessor('email', {
-      header: 'Email',
       cell: info => info.getValue(),
     }),
     columnHelper.accessor('status', {
@@ -174,6 +185,13 @@ const ReservationsPage = () => {
       header: 'Actions',
       cell: info => (
         <div className="flex space-x-2">
+          <button
+            className="p-1 hover:bg-blue-100 rounded"
+            onClick={() => viewReservationDetails(info.row.original)}
+            aria-label="View reservation details"
+          >
+            <Eye className="h-4 w-4 text-blue-600" />
+          </button>
           {info.row.original.status === 'pending' && (
             <>
               <button 
@@ -211,6 +229,134 @@ const ReservationsPage = () => {
     onGlobalFilterChange: setGlobalFilter,
   });
 
+  const ReservationDetailModal = () => {
+    if (!selectedReservation || !showDetailModal) return null;
+    
+    const reservation = selectedReservation;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg p-6 max-w-2xl w-full m-4 max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Reservation Details</h2>
+            <button onClick={() => setShowDetailModal(false)} className="text-gray-500 hover:text-gray-700">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="border-t border-gray-200 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-blue-900 mb-2">Reservation Info</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">ID:</span>
+                    <span className="font-medium">{reservation.reservationId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Date:</span>
+                    <span className="font-medium">{new Date(reservation.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Time:</span>
+                    <span className="font-medium">{reservation.time}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Guests:</span>
+                    <span className={`font-medium ${parseInt(reservation.persons) > 6 ? 'text-amber-600' : ''}`}>
+                      {reservation.persons}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      reservation.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      reservation.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {reservation.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Created:</span>
+                    <span className="font-medium">
+                      {reservation.createdAt ? new Date(reservation.createdAt).toLocaleString() : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-900 mb-2">Customer Info</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Name:</span>
+                    <span className="font-medium">{reservation.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Phone:</span>
+                    <span className="font-medium">{reservation.phone}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Email:</span>
+                    <span className="font-medium">{reservation.email}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">Special Requirements</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <span className="text-gray-600">Occasion:</span>
+                  <span className="font-medium ml-2">
+                    {reservation.occasion ? reservation.occasion : 'None specified'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Preferred Seating:</span>
+                  <span className="font-medium ml-2">
+                    {reservation.preferredSeating ? reservation.preferredSeating : 'No preference'}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-2">
+                <span className="text-gray-600">Special Requests:</span>
+                <div className="mt-1 p-2 bg-white border border-gray-200 rounded">
+                  {reservation.specialRequests ? reservation.specialRequests : 'None specified'}
+                </div>
+              </div>
+            </div>
+            
+            {reservation.status === 'pending' && (
+              <div className="mt-4 flex space-x-2">
+                <button
+                  onClick={() => {
+                    handleStatusChange(reservation.id, 'approved');
+                    setShowDetailModal(false);
+                  }}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                >
+                  Approve Reservation
+                </button>
+                <button
+                  onClick={() => {
+                    handleStatusChange(reservation.id, 'cancelled');
+                    setShowDetailModal(false);
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
+                >
+                  Cancel Reservation
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -237,47 +383,39 @@ const ReservationsPage = () => {
         {isLoading ? (
           <div className="p-4 text-center">Loading reservations...</div>
         ) : reservations.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">No reservations found for this date.</div>
+          <div className="p-4 text-center">No reservations found for the selected date.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
-                {table.getHeaderGroups().map(headerGroup => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map(header => (
-                      <th
-                        key={header.id}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>{flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}</span>
-                          {header.column.getIsSorted() && (
-                            header.column.getIsSorted() === 'asc' ? 
-                              <ChevronUp className="w-4 h-4" /> : 
-                              <ChevronDown className="w-4 h-4" />
-                          )}
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
+                <tr>
+                  {table.getFlatHeaders().map(header => (
+                    <th 
+                      key={header.id}
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                        {header.column.getCanSort() && (
+                          <span>
+                            {{
+                              asc: <ChevronUp className="h-4 w-4" />,
+                              desc: <ChevronDown className="h-4 w-4" />,
+                            }[header.column.getIsSorted() as string] ?? null}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr key={row.id} className="hover:bg-gray-50">
                     {row.getVisibleCells().map(cell => (
-                      <td
-                        key={cell.id}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                      <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
                   </tr>
@@ -287,6 +425,8 @@ const ReservationsPage = () => {
           </div>
         )}
       </div>
+
+      {showDetailModal && <ReservationDetailModal />}
     </div>
   );
 };

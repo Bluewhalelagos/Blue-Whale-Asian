@@ -7,6 +7,7 @@ import LoginPage from './admin/pages/LoginPage';
 import DashboardPage from './admin/pages/DashboardPage';
 import ReservationsPage from './admin/pages/ReservationsPage';
 import CareersPage from './admin/pages/CareersPage';
+import SettingsPage from './admin/pages/SettingsPage'; // ✅ Import SettingsPage
 import './index.css';
 
 const router = createBrowserRouter([
@@ -34,7 +35,10 @@ const router = createBrowserRouter([
         path: 'careers',
         element: <CareersPage />,
       },
-      // Add other admin routes here
+      {
+        path: 'settings', // ✅ Add SettingsPage route
+        element: <SettingsPage />,
+      },
     ],
   },
 ]);
