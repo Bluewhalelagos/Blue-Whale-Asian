@@ -4,6 +4,7 @@ import { db } from '../firebase/config';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { translateText } from '../utils/translate';
 import logoImage from '../BlueWhale-Final-logo1.png';
+
 interface RestaurantStatus {
   isOpen: boolean;
   openTime: string;
@@ -13,14 +14,12 @@ interface RestaurantStatus {
 
 interface NavbarProps {
   onBookTable: () => void;
+  language: 'en' | 'pt';
+  onLanguageChange: (language: 'en' | 'pt') => void;
 }
 
 // Define translations
-interface TranslationData {
-  [key: string]: { en: string; pt: string };
-}
-
-const translations: TranslationData = {
+const translations = {
   homeLink: { en: 'Home', pt: 'Início' },
   aboutLink: { en: 'About Us', pt: 'Sobre Nós' },
   menuLink: { en: 'Menu', pt: 'Cardápio' },
@@ -36,10 +35,9 @@ const translations: TranslationData = {
   wereClosed: { en: 'We\'re Closed', pt: 'Estamos Fechados' }
 };
 
-const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
+const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [language, setLanguage] = useState<'en' | 'pt'>('en');
   const [dynamicTranslations, setDynamicTranslations] = useState<Record<string, string>>({});
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
@@ -56,12 +54,11 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
   // Toggle language
   const toggleLanguage = async () => {
     const newLang = language === 'en' ? 'pt' : 'en';
-    setLanguage(newLang);
+    onLanguageChange(newLang);
     
     // Fetch dynamic translations for time-related texts if needed
     if (newLang === 'pt' && Object.keys(dynamicTranslations).length === 0) {
       try {
-        // Translate any dynamic content not in our static translations
         const timeFormat = await translateText(`${restaurantStatus.openTime}`, 'pt');
         setDynamicTranslations(prev => ({
           ...prev,
@@ -76,11 +73,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
   // Add scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(window.scrollY > 20);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -104,6 +97,29 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
     return () => unsubscribe();
   }, []);
 
+  const StatusIndicator = () => (
+    <div className={`flex items-center px-3 py-1 rounded-full transition-all duration-300 ${
+      restaurantStatus.isOpen       ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
+      : 'bg-gradient-to-r from-red-500 to-rose-600 text-white'
+    }`}>
+      <div className="flex items-center mr-2">
+        {restaurantStatus.isOpen ? (
+          <CheckCircle className="h-4 w-4 mr-1 animate-pulse" />
+        ) : (
+          <XCircle className="h-4 w-4 mr-1" />
+        )}
+        <span className="font-medium text-sm">
+          {restaurantStatus.isOpen ? t('openNow') : t('closed')}
+        </span>
+      </div>
+      <div className="text-xs font-light opacity-90">
+        {restaurantStatus.isOpen 
+          ? `${t('until')} ${restaurantStatus.closeTime}` 
+          : `${t('opensAt')} ${restaurantStatus.openTime}`}
+      </div>
+    </div>
+  );
+
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${
       scrolled 
@@ -113,33 +129,12 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-          <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-32 h-auto" />
-           
+            <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-32 h-auto" />
           </div>
 
           {/* Status Indicator - Desktop */}
           <div className="hidden md:flex items-center">
-            <div className={`flex items-center px-3 py-1 rounded-full transition-all duration-300 ${
-              restaurantStatus.isOpen 
-                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
-                : 'bg-gradient-to-r from-red-500 to-rose-600 text-white'
-            }`}>
-              <div className="flex items-center mr-2">
-                {restaurantStatus.isOpen ? (
-                  <CheckCircle className="h-4 w-4 mr-1 animate-pulse" />
-                ) : (
-                  <XCircle className="h-4 w-4 mr-1" />
-                )}
-                <span className="font-medium text-sm">
-                  {restaurantStatus.isOpen ? t('openNow') : t('closed')}
-                </span>
-              </div>
-              <div className="text-xs font-light opacity-90">
-                {restaurantStatus.isOpen 
-                  ? `${t('until')} ${restaurantStatus.closeTime}` 
-                  : `${t('opensAt')} ${restaurantStatus.openTime}`}
-              </div>
-            </div>
+            <StatusIndicator />
           </div>
 
           {/* Desktop Menu */}
@@ -177,19 +172,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
 
           {/* Mobile Status & Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
-            <div className={`flex items-center px-2 py-1 rounded-full text-xs transition-all duration-300 ${
-              restaurantStatus.isOpen 
-                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
-                : 'bg-gradient-to-r from-red-500 to-rose-600 text-white'
-            }`}>
-              {restaurantStatus.isOpen ? (
-                <CheckCircle className="h-3 w-3 mr-1 animate-pulse" />
-              ) : (
-                <XCircle className="h-3 w-3 mr-1" />
-              )}
-              <span>{restaurantStatus.isOpen ? t('open') : t('closed')}</span>
-            </div>
-            
+            <StatusIndicator />
             <button 
               className="p-1 text-pink-700"
               onClick={() => setIsOpen(!isOpen)}

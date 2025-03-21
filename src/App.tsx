@@ -42,7 +42,7 @@ function App() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'pt'>('en');
   
-  // Listen for language changes from Navbar component
+  // Language change handler
   const handleLanguageChange = (newLang: 'en' | 'pt') => {
     setLanguage(newLang);
   };
@@ -57,17 +57,24 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Pass language state & handler to Navbar */}
-      <Navbar onBookTable={handleBookTable} />
+      <Navbar 
+        onBookTable={handleBookTable} 
+        language={language} 
+        onLanguageChange={handleLanguageChange} 
+      />
       
       <main className="flex-grow pt-16"> {/* Added pt-16 to account for fixed navbar */}
-        <Hero />
-        <About />
-        <Gallery />
-        <MenuSection />
-        <Reviews />
-        <Careers />
-        <Delivery />
-        <Contact />
+        <Hero 
+          onBookTable={handleBookTable} 
+          language={language}
+        />
+        <About language={language} />
+        <Gallery language={language} />
+        <MenuSection language={language} />
+        <Reviews language={language} />
+        <Careers language={language} />
+        <Delivery language={language} />
+        <Contact language={language} />
       </main>
       
       <footer className="bg-pink-200 text-pink-800 py-8">
@@ -75,7 +82,7 @@ function App() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* First column - Logo and tagline */}
             <div className="text-center md:text-left">
-            <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-32 h-auto" />
+            <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-50 h-auto mb-4" />
               <h3 className="text-xl font-bold mb-4">{footerText.experienceFusion}</h3>
               
               {/* Social media links moved here */}
@@ -100,7 +107,7 @@ function App() {
             </div>
             
             {/* Third column - Map */}
-            <div className="text-center md:text-right">
+            <div className="text-center md:text-left">
               <h3 className="text-xl font-bold mb-4">{footerText.findUs}</h3>
               <div className="w-full h-64 rounded-lg overflow-hidden shadow-lg">
                 <iframe
