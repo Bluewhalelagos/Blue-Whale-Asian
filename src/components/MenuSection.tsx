@@ -42,9 +42,9 @@ const MenuSection = () => {
   };
 
   return (
-    <section id="menu" className="py-16 bg-white">
+    <section id="menu" className="py-16 bg-pink-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-blue-900 text-center mb-12">Our Menu</h2>
+        <h2 className="text-3xl font-bold text-pink-700 text-center mb-12">Our Menu</h2>
         
         <div className="max-w-4xl mx-auto perspective">
           {isOpen ? (
@@ -62,7 +62,7 @@ const MenuSection = () => {
                 
                 {/* Right page - empty or last page message */}
                 <div className="book-page book-page-right shadow-lg">
-                  <div className="last-page bg-white h-full">
+                  <div className="last-page bg-pink-300 h-full">
                     <div className="p-6 h-full flex flex-col items-center justify-center">
                       <p className="text-gray-500 text-center">Thank you for dining with us</p>
                       <p className="text-gray-400 text-center mt-4 italic">Click to close</p>
@@ -77,7 +77,7 @@ const MenuSection = () => {
               className="book-cover cursor-pointer"
               onClick={handleClick}
             >
-              <div className="cover-content flex flex-col items-center justify-center h-full bg-blue-900 text-white p-8 rounded-lg">
+              <div className="cover-content flex flex-col items-center justify-center h-full bg-pink-700 text-white p-8 rounded-lg">
                 <UtensilsCrossed className="w-32 h-32 text-amber-400 mb-8" />
                 <h1 className="text-5xl font-bold text-white text-center mb-4">Menu</h1>
                 <h2 className="text-3xl text-amber-400 text-center">Blue Whale Asian Fusion</h2>

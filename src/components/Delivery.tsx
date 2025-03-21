@@ -3,7 +3,7 @@ import { BeerIcon as UberIcon } from 'lucide-react';
 
 const Delivery = () => {
   return (
-    <section id="delivery" className="py-20 bg-gray-50">
+    <section id="delivery" className="py-20 bg-pink-50">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-blue-900 mb-6">Order for Delivery</h2>

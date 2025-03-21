@@ -38,14 +38,14 @@ const Reviews = () => {
   };
 
   return (
-    <section id="reviews" className="py-20 bg-gray-50">
+    <section id="reviews" className="py-20 bg-pink-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-blue-900 text-center mb-12">Customer Reviews</h2>
+        <h2 className="text-3xl font-bold text-pink-700 text-center mb-12">Customer Reviews</h2>
         <div className="max-w-4xl mx-auto">
           <Slider {...settings}>
             {reviews.map((review, index) => (
               <div key={index} className="px-4">
-                <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+                <div className="bg-pink-300 rounded-lg shadow-lg p-8 text-center">
                   <img
                     src={review.image}
                     alt={review.name}
@@ -57,7 +57,7 @@ const Reviews = () => {
                     ))}
                   </div>
                   <p className="text-gray-700 italic mb-4">"{review.text}"</p>
-                  <p className="font-semibold text-blue-900">{review.name}</p>
+                  <p className="font-semibold text-pink-700">{review.name}</p>
                 </div>
               </div>
             ))}

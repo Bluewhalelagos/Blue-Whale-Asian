@@ -36,7 +36,7 @@ const Careers = () => {
 
   if (isLoading) {
     return (
-      <section id="careers" className="py-20 bg-white">
+      <section id="careers" className="py-20 bg-pink-50">
         <div className="container mx-auto px-4">
           <div className="text-center">
             <p className="text-gray-600">Loading career opportunities...</p>
@@ -48,7 +48,7 @@ const Careers = () => {
 
   if (positions.length === 0) {
     return (
-      <section id="careers" className="py-20 bg-white">
+      <section id="careers" className="py-20 bg-pink-50">
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-blue-900 mb-4">Join Our Team</h2>
@@ -62,7 +62,7 @@ const Careers = () => {
   }
 
   return (
-    <section id="careers" className="py-20 bg-white">
+    <section id="careers" className="py-20 bg-pink-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-blue-900 mb-4">Join Our Team</h2>
