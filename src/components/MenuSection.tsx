@@ -6,7 +6,7 @@ const MenuSection = () => {
   const [currentSpread, setCurrentSpread] = useState(0);
   const bookRef = useRef(null);
   const adobeEmbedApiKey = '6e314bf5008143759eaaec590c411470';
-  const pdfUrl = '../Fancy Restaurant Menu1.pdf'; // Replace with actual file path
+  const pdfUrl = '../Fancy Restaurant Menu.pdf'; // Replace with actual file path
 
   useEffect(() => {
     if (isOpen) {
