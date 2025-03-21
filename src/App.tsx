@@ -76,7 +76,7 @@ function App() {
             {/* First column - Logo and tagline */}
             <div className="text-center md:text-left">
               <img 
-                src="src/BlueWhale-Final-logo1.png" 
+                src="../BlueWhale-Final-logo1.png" 
                 alt="Restaurant Logo" 
                 className="w-40 h-auto" 
               />

@@ -114,7 +114,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
             <img 
-              src="src/BlueWhale-Final-logo1.png" 
+              src="../BlueWhale-Final-logo1.png" 
               alt="Restaurant Logo" 
               className="w-40 h-auto" 
             />
