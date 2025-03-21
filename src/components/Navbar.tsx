@@ -107,8 +107,8 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${
       scrolled 
-        ? 'bg-pink-100 shadow-lg text-pink-800' 
-        : 'bg-pink-50 text-pink-700'
+        ? 'bg-pink-300 shadow-lg text-pink-800' 
+        : 'bg-pink-200 text-pink-700'
     }`}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">

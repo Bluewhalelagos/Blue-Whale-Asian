@@ -54,7 +54,7 @@ const Contact = () => {
                 <MapPin className="w-6 h-6 text-amber-400 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-gray-900">Address</h3>
-                  <p className="text-gray-600">123 Ocean Drive, Seaside City</p>
+                  <p className="text-gray-600">Largo Salazar Moscovo, Lote 4, Loja A, 8600-522, Lagos</p>
                 </div>
               </div>
               
@@ -63,6 +63,14 @@ const Contact = () => {
                 <div>
                   <h3 className="font-semibold text-gray-900">Phone</h3>
                   <p className="text-gray-600">(555) 123-4567</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4">
+                <Mail className="w-6 h-6 text-amber-400 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Email</h3>
+                  <p className="text-gray-600">info@bluewhalerestaurant.com</p>
                 </div>
               </div>
               
