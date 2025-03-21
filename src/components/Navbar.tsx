@@ -3,7 +3,7 @@ import { Menu, X, UtensilsCrossed, Clock, CheckCircle, XCircle } from 'lucide-re
 import { db } from '../firebase/config';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { translateText } from '../utils/translate';
-
+import logoImage from '../BlueWhale-Final-logo1.png';
 interface RestaurantStatus {
   isOpen: boolean;
   openTime: string;
@@ -113,12 +113,8 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable }) => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <img 
-              src="../BlueWhale-Final-logo1.png" 
-              alt="Restaurant Logo" 
-              className="w-40 h-auto" 
-            />
-            {/* Removed "Blue Whale Asian" text */}
+          <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-32 h-auto" />
+           
           </div>
 
           {/* Status Indicator - Desktop */}

@@ -12,7 +12,7 @@ import Careers from './components/Careers';
 import Delivery from './components/Delivery';
 import Contact from './components/Contact';
 import ReservationModal from './components/ReservationModal';
-
+import logoImage from './BlueWhale-Final-logo1.png';
 // Optional: Import translation utility if you have it
 import { translateText } from './utils/translate';
 
@@ -75,11 +75,7 @@ function App() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* First column - Logo and tagline */}
             <div className="text-center md:text-left">
-              <img 
-                src="../BlueWhale-Final-logo1.png" 
-                alt="Restaurant Logo" 
-                className="w-40 h-auto" 
-              />
+            <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-32 h-auto" />
               <h3 className="text-xl font-bold mb-4">{footerText.experienceFusion}</h3>
               
               {/* Social media links moved here */}
