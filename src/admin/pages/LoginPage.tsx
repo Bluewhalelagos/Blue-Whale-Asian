@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/config';
-import logoImage from '../../BlueWhale-Final-logo.png';
+import logoImage from '../../BlueWhale-Final-logo1.png';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const LoginPage = () => {
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-yellow-400">
         <div className="flex justify-center mb-6">
           <div className="flex items-center">
-            <img src={logoImage} alt="black Whale Asian Fusion Logo" className="w-30 h-auto" />
+            <img src={logoImage} alt="black Whale Asian Fusion Logo" className="w-40 h-auto" />
           </div>
         </div>
         
