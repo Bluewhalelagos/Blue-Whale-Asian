@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/config';
-import logoImage from '../../blueWhale-Final-logo1.png';
+import logoImage from '../../BlueWhale-Final-logo.png';
 
 const LoginPage = () => {
   const navigate = useNavigate();
