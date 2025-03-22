@@ -6,20 +6,25 @@ interface MenuSectionProps {
 }
 
 // Define translations for the Menu component
-const translations = {
+const translations = { 
   en: {
     title: "Our Menu",
     subtitle: "Blue Whale Asian Fusion",
     clickToOpen: "Click to open",
-    closeMenu: "Close Menu"
+    closeMenu: "Close Menu",
+    description: "Food is an integral part of Asian culture and heritage. The signature menu at Blue Whale Lagos celebrates Asian cuisine with an extensive selection of dishes. From rich and aromatic curries to delicately prepared Ramen, our mission is to bring a taste of Asian fusion cuisine to your table.",
+    viewMenu: "View Our Menu"
   },
   pt: {
     title: "Nosso Menu",
     subtitle: "Blue Whale Fusão Asiática",
     clickToOpen: "Clique para abrir",
-    closeMenu: "Fechar Menu"
+    closeMenu: "Fechar Menu",
+    description: "A comida é uma parte essencial da cultura e herança asiática. O menu exclusivo do Blue Whale Lagos celebra a culinária asiática com uma ampla seleção de pratos. Desde curries ricos e aromáticos até Ramen delicadamente preparados, nossa missão é trazer o sabor da fusão asiática para a sua mesa.",
+    viewMenu: "Ver Nosso Menu"
   }
 };
+
 
 const MenuSection: React.FC<MenuSectionProps> = ({ language }) => {
   const [isOpen, setIsOpen] = useState(false);

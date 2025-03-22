@@ -9,17 +9,18 @@ interface DeliveryProps {
 const translations = {
   en: {
     title: "Order for Delivery",
-    description: "Enjoy our delicious Asian fusion cuisine from the comfort of your home.",
+    description: "Discover flavors that will make you want more. Get ready to fall in love with our menu selections. Don’t just order, create a masterpiece with our menu. Order now!",
     uberEatsInfo: "Order now through Uber Eats for quick and reliable delivery.",
     orderButton: "Order on Uber Eats"
   },
   pt: {
     title: "Encomende para Entrega",
-    description: "Desfrute da nossa deliciosa cozinha de fusão asiática no conforto da sua casa.",
+    description: "Descubra sabores que vão deixá-lo com vontade de mais. Prepare-se para se apaixonar pelas nossas opções do menu. Não se limite a encomendar, crie uma verdadeira obra-prima com o nosso menu. Peça agora!",
     uberEatsInfo: "Encomende agora através do Uber Eats para uma entrega rápida e confiável.",
     orderButton: "Encomendar no Uber Eats"
   }
 };
+
 
 const Delivery: React.FC<DeliveryProps> = ({ language }) => {
   // Get the appropriate translations based on the current language

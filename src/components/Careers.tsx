@@ -213,12 +213,16 @@ const Careers: React.FC<CareersProps> = ({ language }) => {
             animate="visible"
             variants={containerVariants}
           >
-            <motion.h2 
-              className="text-4xl font-bold text-amber-400 mb-4"
-              variants={titleVariants}
-            >
-              {text.title}
-            </motion.h2>
+          <motion.h2 
+          className="text-4xl font-bold text-amber-500 mb-4"
+          variants={titleVariants}
+          initial="visible"
+          animate="visible"
+          transition={{ delay: 0, duration: 0.5 }} // Reduce delay
+        >
+          {text.title}
+        </motion.h2>
+        
             <motion.div 
               className="h-1 bg-amber-500 mx-auto mb-6"
               variants={underlineVariants}
