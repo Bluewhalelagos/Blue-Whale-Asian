@@ -130,7 +130,7 @@ const Careers: React.FC<CareersProps> = ({ language }) => {
                 </p>
               </div>
               <button 
-                onClick={() => window.location.href = `mailto:careers@bluewhale.com?subject=Application for ${getLocalizedField(position, 'title')}`}
+                onClick={() => window.location.href = `mailto:bluewhalelagos@gmail.com ?subject=Application for ${getLocalizedField(position, 'title')}`}
                 className="w-full bg-amber-500 text-black font-bold py-3 rounded-md hover:bg-amber-400 transition-colors"
               >
                 {text.applyNow}
