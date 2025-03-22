@@ -1,10 +1,4 @@
 import React from 'react';
-import Image1 from '../Image1.jpg';
-import Image2 from '../Image2.jpg';
-import Image3 from '../Image3.jpg';
-import Image4 from '../Image4.jpg';
-import Image5 from '../Image5.jpg';
-import Image6 from '../Image6.jpg';
 
 interface GalleryProps {
   language: 'en' | 'pt';
@@ -28,35 +22,35 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
   // Get the appropriate translations based on the current language
   const text = translations[language];
 
-  // Import images directly to ensure they're properly bundled
+  // Images hosted on PostImage
   const images = [
     {
-      img: Image4,
+      img: "https://i.postimg.cc/76nnmD9x/image4.jpg",
       alt: "Sushi platter",
       span: "col-span-2 row-span-2"
     },
     {
-      img: Image2,
+      img: "https://i.postimg.cc/x8jyZ7pL/image2.jpg",
       alt: "Asian noodle soup",
       span: "col-span-1 row-span-1"
     },
     {
-      img: Image3,
+      img: "https://i.postimg.cc/vTPLwzCk/image3.jpg",
       alt: "Dim sum selection",
       span: "col-span-1 row-span-2"
     },
     {
-      img: Image1,
+      img: "https://i.postimg.cc/fW5vdzkC/Image1.jpg",
       alt: "Restaurant interior",
       span: "col-span-1 row-span-2"
     },
     {
-      img: Image5,
+      img: "https://i.postimg.cc/dt1jmbyY/image5.jpg",
       alt: "Restaurant interior",
       span: "col-span-2 row-span-1"
     },
     {
-      img: Image6,
+      img: "https://i.postimg.cc/SNv7Zg6z/image6.jpg",
       alt: "Restaurant interior",
       span: "col-span-1 row-span-1"
     }
