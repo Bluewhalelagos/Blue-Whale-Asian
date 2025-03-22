@@ -50,10 +50,10 @@ const AdminLayout = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 bg-gradient-to-b from-blue-900 to-blue-800 text-white shadow-lg">
+      <div className="w-64 bg-gradient-to-b from-black to-blue-800 text-white shadow-lg">
         <div className="p-4 flex justify-center border-b border-blue-700">
           <div className="flex flex-col items-center">
-            <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-32 h-auto" />
+            <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-50 h-auto" />
             <span className="text-lg font-bold text-yellow-400 mt-2">Admin Portal</span>
           </div>
         </div>
