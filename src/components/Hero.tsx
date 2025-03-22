@@ -31,21 +31,21 @@ const Hero: React.FC<HeroProps> = ({ onBookTable, language }) => {
           backgroundImage: 'url("https://images.unsplash.com/photo-1552566626-52f8b828add9?ixlib=rb-1.2.1&auto=format&fit=crop&w=2850&q=80")',
         }}
       >
-        <div className="absolute inset-0 bg-pink-900/50"></div>
+        <div className="absolute inset-0 bg-black/60"></div>
       </div>
       
       <div className="relative h-full flex items-center justify-center text-center">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+        <div className="container mx-auto px-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
             {text.heading}
           </h1>
-          <p className="text-xl text-pink-50 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto drop-shadow">
             {text.subheading}
           </p>
           <button
             onClick={onBookTable}
-            className="bg-pink-400 text-pink-900 px-8 py-3 rounded-full
-              text-lg font-semibold hover:bg-pink-300 transition-colors"
+            className="bg-amber-500 text-black px-8 py-3 rounded-full text-lg font-semibold shadow-lg 
+              hover:bg-amber-400 transition-transform transform hover:scale-105"
           >
             {text.buttonText}
           </button>

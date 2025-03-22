@@ -123,8 +123,8 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${
       scrolled 
-        ? 'bg-pink-300 shadow-lg text-pink-800' 
-        : 'bg-pink-200 text-pink-700'
+        ? 'bg-black-300 shadow-lg text-white' 
+        : 'bg-black-200 text-black'
     }`}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
@@ -139,18 +139,18 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
 
           {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8">
-            <a href="#" className="font-medium hover:text-pink-500 transition-colors duration-200">{t('homeLink')}</a>
-            <a href="#about" className="font-medium hover:text-pink-500 transition-colors duration-200">{t('aboutLink')}</a>
-            <a href="#menu" className="font-medium hover:text-pink-500 transition-colors duration-200">{t('menuLink')}</a>
+            <a href="#" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('homeLink')}</a>
+            <a href="#about" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('aboutLink')}</a>
+            <a href="#menu" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('menuLink')}</a>
             <button 
               onClick={onBookTable}
-              className="font-medium flex items-center space-x-1 hover:text-pink-500 transition-colors duration-200"
+              className="font-medium flex items-center space-x-1 hover:text-amber-500 transition-colors duration-200"
             >
               <span>{t('bookTableLink')}</span>
               <UtensilsCrossed className="h-4 w-4" />
             </button>
-            <a href="#delivery" className="font-medium hover:text-pink-500 transition-colors duration-200">{t('deliveryLink')}</a>
-            <a href="#careers" className="font-medium hover:text-pink-500 transition-colors duration-200">{t('careersLink')}</a>
+            <a href="#delivery" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('deliveryLink')}</a>
+            <a href="#careers" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('careersLink')}</a>
           </div>
 
           {/* Language Toggle */}
@@ -158,14 +158,14 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
             <button 
               onClick={() => language !== 'en' && toggleLanguage()}
               className={`font-medium transition-colors duration-200 ${
-                language === 'en' ? 'text-pink-500' : 'hover:text-pink-500'
+                language === 'en' ? 'text-amber-500' : 'hover:text-amber-500'
               }`}
             >EN</button>
-            <span className="text-pink-400">|</span>
+            <span className="text-amber-400">|</span>
             <button 
               onClick={() => language !== 'pt' && toggleLanguage()}
               className={`font-medium transition-colors duration-200 ${
-                language === 'pt' ? 'text-pink-500' : 'hover:text-pink-500'
+                language === 'pt' ? 'text-amber-500' : 'hover:text-amber-500'
               }`}
             >PT</button>
           </div>
@@ -174,7 +174,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
           <div className="md:hidden flex items-center space-x-2">
             <StatusIndicator />
             <button 
-              className="p-1 text-pink-700"
+              className="p-1 text-amber-700"
               onClick={() => setIsOpen(!isOpen)}
               aria-label="Toggle menu"
             >
@@ -209,35 +209,35 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
               </div>
             </div>
             
-            <a href="#" className="block px-3 py-2 font-medium hover:bg-pink-200 rounded transition-colors duration-200">{t('homeLink')}</a>
-            <a href="#about" className="block px-3 py-2 font-medium hover:bg-pink-200 rounded transition-colors duration-200">{t('aboutLink')}</a>
-            <a href="#menu" className="block px-3 py-2 font-medium hover:bg-pink-200 rounded transition-colors duration-200">{t('menuLink')}</a>
+            <a href="#" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('homeLink')}</a>
+            <a href="#about" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('aboutLink')}</a>
+            <a href="#menu" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('menuLink')}</a>
             <button 
               onClick={() => {
                 onBookTable();
                 setIsOpen(false);
               }}
-              className="flex items-center w-full text-left px-3 py-2 font-medium hover:bg-pink-200 rounded transition-colors duration-200"
+              className="flex items-center w-full text-left px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200"
             >
               <span>{t('bookTableLink')}</span>
               <UtensilsCrossed className="h-4 w-4 ml-1" />
             </button>
-            <a href="#delivery" className="block px-3 py-2 font-medium hover:bg-pink-200 rounded transition-colors duration-200">{t('deliveryLink')}</a>
-            <a href="#careers" className="block px-3 py-2 font-medium hover:bg-pink-200 rounded transition-colors duration-200">{t('careersLink')}</a>
+            <a href="#delivery" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('deliveryLink')}</a>
+            <a href="#careers" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('careersLink')}</a>
             
             {/* Language toggle in mobile menu */}
             <div className="flex space-x-4 px-3 py-2">
               <button 
                 onClick={() => language !== 'en' && toggleLanguage()}
                 className={`font-medium transition-colors duration-200 ${
-                  language === 'en' ? 'text-pink-500' : 'hover:text-pink-500'
+                  language === 'en' ? 'text-amber-500' : 'hover:text-amber-500'
                 }`}
               >EN</button>
-              <span className="text-pink-400">|</span>
+              <span className="text-amber-400">|</span>
               <button 
                 onClick={() => language !== 'pt' && toggleLanguage()}
                 className={`font-medium transition-colors duration-200 ${
-                  language === 'pt' ? 'text-pink-500' : 'hover:text-pink-500'
+                  language === 'pt' ? 'text-amber-500' : 'hover:text-amber-500'
                 }`}
               >PT</button>
             </div>

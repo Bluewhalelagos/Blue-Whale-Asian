@@ -1,25 +1,53 @@
 import React from 'react';
 import { BeerIcon as UberIcon } from 'lucide-react';
 
-const Delivery = () => {
+interface DeliveryProps {
+  language: 'en' | 'pt';
+}
+
+// Define translations for the Delivery component
+const translations = {
+  en: {
+    title: "Order for Delivery",
+    description: "Enjoy our delicious Asian fusion cuisine from the comfort of your home.",
+    uberEatsInfo: "Order now through Uber Eats for quick and reliable delivery.",
+    orderButton: "Order on Uber Eats"
+  },
+  pt: {
+    title: "Encomende para Entrega",
+    description: "Desfrute da nossa deliciosa cozinha de fusão asiática no conforto da sua casa.",
+    uberEatsInfo: "Encomende agora através do Uber Eats para uma entrega rápida e confiável.",
+    orderButton: "Encomendar no Uber Eats"
+  }
+};
+
+const Delivery: React.FC<DeliveryProps> = ({ language }) => {
+  // Get the appropriate translations based on the current language
+  const text = translations[language];
+
   return (
-    <section id="delivery" className="py-20 bg-pink-50">
-      <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-blue-900 mb-6">Order for Delivery</h2>
-          <p className="text-gray-600 mb-8">
-            Enjoy our delicious Asian fusion cuisine from the comfort of your home. 
-            Order now through Uber Eats for quick and reliable delivery.
-          </p>
-          <a 
-            href="https://www.ubereats.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center bg-black text-white px-8 py-4 rounded-full hover:bg-gray-800 transition-colors"
-          >
-            <span className="mr-2">Order on Uber Eats</span>
-            <UberIcon className="w-6 h-6" />
-          </a>
+    <section id="delivery" className="py-24 bg-black">
+      <div className="container mx-auto px-6">
+        <div className="mb-16 text-center">
+          <h2 className="text-4xl font-bold text-amber-400 mb-2">{text.title}</h2>
+          <div className="w-24 h-1 bg-amber-500 mx-auto"></div>
+        </div>
+        
+        <div className="max-w-3xl mx-auto backdrop-blur-sm bg-black/40 p-8 rounded-lg border border-amber-400/20 shadow-xl">
+          <div className="text-center space-y-6">
+            <p className="text-gray-300 text-lg">{text.description}</p>
+            <p className="text-gray-300">{text.uberEatsInfo}</p>
+            
+            <a 
+              href="https://www.ubereats.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center bg-amber-500 text-black font-bold px-6 py-3 rounded-md hover:bg-amber-400 transition-colors"
+            >
+              <UberIcon className="w-5 h-5 mr-2" />
+              {text.orderButton}
+            </a>
+          </div>
         </div>
       </div>
     </section>
