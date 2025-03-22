@@ -33,7 +33,7 @@ const LoginPage = () => {
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-yellow-400">
         <div className="flex justify-center mb-6">
           <div className="flex items-center">
-            <img src={logoImage} alt="black Whale Asian Fusion Logo" className="w-50 h-auto" />
+            <img src={logoImage} alt="black Whale Asian Fusion Logo" className="w-30 h-auto" />
           </div>
         </div>
         
