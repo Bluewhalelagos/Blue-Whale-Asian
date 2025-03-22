@@ -1,7 +1,4 @@
-import React from 'react';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 
 interface ReviewsProps {
@@ -61,17 +58,31 @@ const translations = {
 const Reviews: React.FC<ReviewsProps> = ({ language }) => {
   // Get the appropriate translations based on the current language
   const text = translations[language];
-
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 5000,
-    arrows: false,
-    dotsClass: "slick-dots custom-dots"
+  const [activeIndex, setActiveIndex] = useState(0);
+  const reviewsCount = text.reviews.length;
+  
+  // Function to rotate to next review
+  const nextReview = () => {
+    setActiveIndex((prevIndex) => (prevIndex + 1) % reviewsCount);
+  };
+  
+  // Function to rotate to previous review
+  const prevReview = () => {
+    setActiveIndex((prevIndex) => (prevIndex - 1 + reviewsCount) % reviewsCount);
+  };
+  
+  // Auto-rotate every 5 seconds
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      nextReview();
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Get the indices of the previous, current, and next reviews
+  const getReviewIndex = (offset: number) => {
+    return (activeIndex + offset + reviewsCount) % reviewsCount;
   };
 
   return (
@@ -82,40 +93,110 @@ const Reviews: React.FC<ReviewsProps> = ({ language }) => {
           <div className="w-24 h-1 bg-amber-500 mx-auto"></div>
         </div>
         
-        <div className="max-w-4xl mx-auto">
-          <Slider {...settings}>
-            {text.reviews.map((review, index) => (
-              <div key={index} className="px-4">
-                <div className="backdrop-blur-sm bg-black/40 rounded-lg border border-amber-400/20 shadow-xl p-8 text-center">
-                  <img
-                    src={review.image}
-                    alt={review.name}
-                    className="w-20 h-20 rounded-full mx-auto mb-6 object-cover border-2 border-amber-400"
-                  />
-                  <div className="flex justify-center mb-6">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="w-6 h-6 fill-current text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-gray-300 italic mb-6 text-lg">"{review.text}"</p>
-                  <p className="font-semibold text-amber-300 text-lg">{review.name}</p>
-                </div>
-              </div>
+        <div className="max-w-6xl mx-auto relative h-96">
+          {/* Carousel container with perspective */}
+          <div className="perspective-container relative h-full w-full overflow-hidden">
+            {/* Previous Review (Left Side) */}
+            <div 
+              className="absolute top-0 left-0 w-4/5 lg:w-1/3 h-full transition-all duration-500 ease-in-out transform -translate-x-8 scale-90 opacity-60 z-10"
+              style={{ 
+                transform: 'translateX(-6%) translateZ(-100px) rotateY(10deg) scale(0.9)',
+                filter: 'brightness(0.7)' 
+              }}
+            >
+              <ReviewCard review={text.reviews[getReviewIndex(-1)]} />
+            </div>
+            
+            {/* Active Review (Center) */}
+            <div 
+              className="absolute top-0 left-0 right-0 mx-auto w-4/5 lg:w-2/5 h-full transition-all duration-500 ease-in-out transform translate-y-0 scale-100 z-20"
+              style={{ 
+                transform: 'translateX(0) translateZ(0) rotateY(0deg) scale(1)',
+                left: '50%',
+                marginLeft: '-40%',
+                '@media (min-width: 1024px)': {
+                  marginLeft: '-20%'
+                }
+              }}
+            >
+              <ReviewCard review={text.reviews[activeIndex]} />
+            </div>
+            
+            {/* Next Review (Right Side) */}
+            <div 
+              className="absolute top-0 right-0 w-4/5 lg:w-1/3 h-full transition-all duration-500 ease-in-out transform translate-x-8 scale-90 opacity-60 z-10"
+              style={{ 
+                transform: 'translateX(6%) translateZ(-100px) rotateY(-10deg) scale(0.9)',
+                filter: 'brightness(0.7)' 
+              }}
+            >
+              <ReviewCard review={text.reviews[getReviewIndex(1)]} />
+            </div>
+          </div>
+          
+          {/* Navigation buttons */}
+          <button 
+            onClick={prevReview}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30 bg-amber-400/80 hover:bg-amber-500 rounded-full p-2 text-black"
+            aria-label="Previous review"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          <button 
+            onClick={nextReview}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-30 bg-amber-400/80 hover:bg-amber-500 rounded-full p-2 text-black"
+            aria-label="Next review"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          
+          {/* Dots indicator */}
+          <div className="flex justify-center mt-8 space-x-2 absolute bottom-0 left-0 right-0">
+            {text.reviews.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveIndex(index)}
+                className={`w-3 h-3 rounded-full ${index === activeIndex ? 'bg-amber-400' : 'bg-amber-400/30'}`}
+                aria-label={`Go to review ${index + 1}`}
+              />
             ))}
-          </Slider>
+          </div>
         </div>
       </div>
       
-      {/* Add custom styles for slider dots to match theme */}
+      {/* Add custom styles for 3D effect */}
       <style jsx>{`
-        :global(.custom-dots li button:before) {
-          color: #f59e0b !important; /* amber-500 */
-        }
-        :global(.custom-dots li.slick-active button:before) {
-          color: #f59e0b !important; /* amber-500 */
+        .perspective-container {
+          perspective: 1000px;
+          transform-style: preserve-3d;
         }
       `}</style>
     </section>
+  );
+};
+
+// Separate component for each review card
+const ReviewCard = ({ review }: { review: any }) => {
+  return (
+    <div className="h-full backdrop-blur-sm bg-black/40 rounded-lg border border-amber-400/20 shadow-xl p-8 text-center">
+      <img
+        src={review.image}
+        alt={review.name}
+        className="w-20 h-20 rounded-full mx-auto mb-6 object-cover border-2 border-amber-400"
+      />
+      <div className="flex justify-center mb-6">
+        {[...Array(review.rating)].map((_, i) => (
+          <Star key={i} className="w-6 h-6 fill-current text-amber-400" />
+        ))}
+      </div>
+      <p className="text-gray-300 italic mb-6 text-lg">"{review.text}"</p>
+      <p className="font-semibold text-amber-300 text-lg">{review.name}</p>
+    </div>
   );
 };
 
