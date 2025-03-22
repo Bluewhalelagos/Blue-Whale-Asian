@@ -123,8 +123,8 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${
       scrolled 
-        ? 'bg-black-300 shadow-lg text-white' 
-        : 'bg-black-200 text-black'
+        ? 'md:bg-black bg-black text-white shadow-lg' 
+        : 'md:bg-transparent bg-white text-black'
     }`}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
@@ -174,7 +174,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
           <div className="md:hidden flex items-center space-x-2">
             <StatusIndicator />
             <button 
-              className="p-1 text-amber-700"
+              className={`p-1 ${scrolled ? 'text-white' : 'text-amber-700'}`}
               onClick={() => setIsOpen(!isOpen)}
               aria-label="Toggle menu"
             >
@@ -189,7 +189,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
             isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="px-2 pt-2 pb-3 space-y-1">
+          <div className={`px-2 pt-2 pb-3 space-y-1 ${scrolled ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {/* Full status display in mobile menu */}
             <div className={`flex items-center justify-between px-3 py-2 mb-2 rounded transition-all duration-300 ${
               restaurantStatus.isOpen 
@@ -209,21 +209,21 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
               </div>
             </div>
             
-            <a href="#" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('homeLink')}</a>
-            <a href="#about" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('aboutLink')}</a>
-            <a href="#menu" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('menuLink')}</a>
+            <a href="#" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('homeLink')}</a>
+            <a href="#about" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('aboutLink')}</a>
+            <a href="#menu" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('menuLink')}</a>
             <button 
               onClick={() => {
                 onBookTable();
                 setIsOpen(false);
               }}
-              className="flex items-center w-full text-left px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200"
+              className={`flex items-center w-full text-left px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}
             >
               <span>{t('bookTableLink')}</span>
               <UtensilsCrossed className="h-4 w-4 ml-1" />
             </button>
-            <a href="#delivery" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('deliveryLink')}</a>
-            <a href="#careers" className="block px-3 py-2 font-medium hover:bg-amber-200 rounded transition-colors duration-200">{t('careersLink')}</a>
+            <a href="#delivery" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('deliveryLink')}</a>
+            <a href="#careers" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('careersLink')}</a>
             
             {/* Language toggle in mobile menu */}
             <div className="flex space-x-4 px-3 py-2">

@@ -64,7 +64,7 @@ const DashboardPage = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
-    openTime: '17:00 PM',
+    openTime: '5:00 PM',
     closeTime: '10:00 PM',
     lastUpdated: new Date().toISOString()
   });
@@ -74,6 +74,42 @@ const DashboardPage = () => {
     applications: 0,
     deliveries: 18
   });
+
+  // Convert from 12-hour format (e.g., "5:00 PM") to 24-hour format (e.g., "17:00")
+  const convertTo24Hour = (time12h: string): string => {
+    const [timePart, modifier] = time12h.split(' ');
+    let [hours, minutes] = timePart.split(':');
+    
+    if (hours === '12') {
+      hours = '00';
+    }
+    
+    if (modifier === 'PM') {
+      hours = (parseInt(hours, 10) + 12).toString();
+    }
+    
+    return `${hours.padStart(2, '0')}:${minutes}`;
+  };
+
+  // Convert from 24-hour format (e.g., "17:00") to 12-hour format (e.g., "5:00 PM")
+  const convertTo12Hour = (time24h: string): string => {
+    const [hours, minutes] = time24h.split(':');
+    const hour = parseInt(hours, 10);
+    
+    let period = 'AM';
+    let displayHour = hour;
+    
+    if (hour > 12) {
+      displayHour = hour - 12;
+      period = 'PM';
+    } else if (hour === 12) {
+      period = 'PM';
+    } else if (hour === 0) {
+      displayHour = 12;
+    }
+    
+    return `${displayHour}:${minutes} ${period}`;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -245,9 +281,9 @@ const DashboardPage = () => {
               <input 
                 type="time" 
                 className="rounded border border-gray-300 px-2 py-1"
-                value={restaurantStatus.openTime.split(' ')[0]}
+                value={convertTo24Hour(restaurantStatus.openTime)}
                 onChange={(e) => {
-                  const newTime = e.target.value + ' PM';
+                  const newTime = convertTo12Hour(e.target.value);
                   updateRestaurantHours(newTime, restaurantStatus.closeTime);
                 }}
               />
@@ -255,9 +291,9 @@ const DashboardPage = () => {
               <input 
                 type="time" 
                 className="rounded border border-gray-300 px-2 py-1"
-                value={restaurantStatus.closeTime.split(' ')[0]}
+                value={convertTo24Hour(restaurantStatus.closeTime)}
                 onChange={(e) => {
-                  const newTime = e.target.value + ' PM';
+                  const newTime = convertTo12Hour(e.target.value);
                   updateRestaurantHours(restaurantStatus.openTime, newTime);
                 }}
               />
