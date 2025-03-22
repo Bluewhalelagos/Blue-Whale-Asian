@@ -19,15 +19,137 @@ interface RestaurantStatus {
 interface ReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  language: 'en' | 'pt'; // Add language prop
 }
 
-const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) => {
+// Define translations for the ReservationModal component
+const translations = {
+  en: {
+    title: "TABLE RESERVATION",
+    contactInfo: "Contact Information",
+    fullName: "Full Name",
+    phone: "Phone Number",
+    email: "Email Address",
+    reservationDetails: "Reservation Details",
+    specialRequests: "Special Requests",
+    occasion: "Select an occasion (optional)",
+    occasions: {
+      birthday: "Birthday",
+      anniversary: "Anniversary",
+      business: "Business Meal",
+      date: "Date Night",
+      other: "Other"
+    },
+    seatingPreference: "Seating Preference",
+    seating: {
+      noPreference: "No Preference",
+      indoor: "Indoor",
+      outdoor: "Outdoor",
+      window: "Window",
+      private: "Private (if available)"
+    },
+    requests: "Any special requests or dietary requirements?",
+    bookButton: "Book a Table",
+    submitting: "Submitting...",
+    closedDay: "WEDNESDAY CLOSED!",
+    closedDayMessage: "Please select another day for your reservation.",
+    restaurantClosed: "NOTICE",
+    restaurantClosedMessage: "The restaurant is currently closed for regular service. You can still make reservations for future dates.",
+    largeGroupTitle: "GROUP RESERVATION",
+    largeGroupHeading: "Large Group Booking",
+    largeGroupMessage: "For groups of 7 or more, we require a phone confirmation to ensure we can accommodate your party.",
+    callNow: "Call +351 920 221 805",
+    goBack: "Go back to reservation form",
+    largeGroupWarning: "Groups of 7+ require phone confirmation",
+    person: "person",
+    people: "people",
+    confirmationTitle: "Reservation Confirmed!",
+    confirmationMessage: "Your table has been reserved. We look forward to serving you!",
+    reservationId: "Reservation ID:",
+    date: "Date:",
+    time: "Time:",
+    partySize: "Party Size:",
+    done: "Done",
+    loading: "Loading reservation system...",
+    errors: {
+      nameRequired: "Name is required",
+      phoneRequired: "Phone number is required",
+      invalidPhone: "Invalid phone number",
+      emailRequired: "Email is required",
+      invalidEmail: "Invalid email address",
+      closed: "We are closed on",
+      hours: "Restaurant hours are"
+    }
+  },
+  pt: {
+    title: "RESERVA DE MESA",
+    contactInfo: "Informações de Contato",
+    fullName: "Nome Completo",
+    phone: "Número de Telefone",
+    email: "Endereço de Email",
+    reservationDetails: "Detalhes da Reserva",
+    specialRequests: "Pedidos Especiais",
+    occasion: "Selecione uma ocasião (opcional)",
+    occasions: {
+      birthday: "Aniversário",
+      anniversary: "Aniversário de Casamento",
+      business: "Refeição de Negócios",
+      date: "Jantar Romântico",
+      other: "Outro"
+    },
+    seatingPreference: "Preferência de Assento",
+    seating: {
+      noPreference: "Sem Preferência",
+      indoor: "Interior",
+      outdoor: "Exterior",
+      window: "Janela",
+      private: "Privado (se disponível)"
+    },
+    requests: "Algum pedido especial ou requisito dietético?",
+    bookButton: "Reservar uma Mesa",
+    submitting: "A submeter...",
+    closedDay: "QUARTAS-FEIRAS FECHADO!",
+    closedDayMessage: "Por favor, selecione outro dia para sua reserva.",
+    restaurantClosed: "AVISO",
+    restaurantClosedMessage: "O restaurante está atualmente fechado para serviço regular. Você ainda pode fazer reservas para datas futuras.",
+    largeGroupTitle: "RESERVA DE GRUPO",
+    largeGroupHeading: "Reserva para Grupo Grande",
+    largeGroupMessage: "Para grupos de 7 ou mais, necessitamos de uma confirmação por telefone para garantir que podemos acomodar o seu grupo.",
+    callNow: "Ligar para +351 920 221 805",
+    goBack: "Voltar ao formulário de reserva",
+    largeGroupWarning: "Grupos de 7+ requerem confirmação por telefone",
+    person: "pessoa",
+    people: "pessoas",
+    confirmationTitle: "Reserva Confirmada!",
+    confirmationMessage: "A sua mesa foi reservada. Estamos ansiosos para recebê-lo!",
+    reservationId: "ID da Reserva:",
+    date: "Data:",
+    time: "Hora:",
+    partySize: "Tamanho do Grupo:",
+    done: "Concluído",
+    loading: "Carregando sistema de reservas...",
+    errors: {
+      nameRequired: "Nome é obrigatório",
+      phoneRequired: "Número de telefone é obrigatório",
+      invalidPhone: "Número de telefone inválido",
+      emailRequired: "Email é obrigatório",
+      invalidEmail: "Endereço de email inválido",
+      closed: "Estamos fechados às",
+      hours: "Horário do restaurante é das"
+    }
+  }
+};
+
+const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, language }) => {
+  // Get translations based on selected language
+  const text = translations[language];
+  
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     date: new Date(),
-    time: '12:00',
+    time: '17:00', // Updated default to match the 5 PM opening time
     persons: '2',
     specialRequests: '',
     occasion: '',
@@ -40,9 +162,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
-    closedDays: ['Sunday'],
-    openingTime: "09:00",
-    closingTime: "22:00",
+    closedDays: ['Wednesday'], // Updated to match the provided information
+    openingTime: "17:00",      // Updated to match the provided information
+    closingTime: "22:00",      // Updated to match the provided information
     specialClosures: []
   });
   const [reservationId, setReservationId] = useState('');
@@ -52,7 +174,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
   const generateTimeSlots = () => {
     const slots = [];
     // Default times in case restaurant status isn't loaded yet
-    const opening = restaurantStatus?.openingTime || "09:00";
+    const opening = restaurantStatus?.openingTime || "17:00";
     const closing = restaurantStatus?.closingTime || "22:00";
     
     // Parse opening and closing hours
@@ -102,7 +224,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
           
           // Set default time to opening time if current time isn't set
           const statusData = statusDoc.data() as RestaurantStatus;
-          if (statusData.openingTime && (!formData.time || formData.time === '12:00')) {
+          if (statusData.openingTime && (!formData.time || formData.time === '17:00')) {
             setFormData(prev => ({...prev, time: statusData.openingTime}));
           }
         }
@@ -121,7 +243,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
 
   // Helper function to check if a time is within restaurant hours, handling overnight hours
   const isTimeWithinRestaurantHours = (time: string) => {
-    const opening = restaurantStatus?.openingTime || "09:00";
+    const opening = restaurantStatus?.openingTime || "17:00";
     const closing = restaurantStatus?.closingTime || "22:00";
     
     // Parse opening and closing hours
@@ -154,30 +276,30 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
     const newErrors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = text.errors.nameRequired;
     }
     
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = text.errors.phoneRequired;
     } else if (!/^\+?[\d\s-]{10,}$/.test(formData.phone)) {
-      newErrors.phone = 'Invalid phone number';
+      newErrors.phone = text.errors.invalidPhone;
     }
     
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = text.errors.emailRequired;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email address';
+      newErrors.email = text.errors.invalidEmail;
     }
     
     // Check if the restaurant is closed on the selected day
-    const dayOfWeek = new Date(formData.date).toLocaleDateString('en-US', { weekday: 'long' });
+    const dayOfWeek = new Date(formData.date).toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT', { weekday: 'long' });
     if (restaurantStatus.closedDays?.includes(dayOfWeek)) {
-      newErrors.date = `We are closed on ${dayOfWeek}s`;
+      newErrors.date = `${text.errors.closed} ${dayOfWeek}s`;
     }
     
     // Check if the selected time is outside operating hours
     if (!isTimeWithinRestaurantHours(formData.time)) {
-      newErrors.time = `Restaurant hours are ${restaurantStatus.openingTime} to ${restaurantStatus.closingTime}`;
+      newErrors.time = `${text.errors.hours} ${restaurantStatus.openingTime} to ${restaurantStatus.closingTime}`;
     }
     
     // Check for special closures
@@ -252,13 +374,20 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
     }
   };
 
+  // Updated isDateDisabled function to always block Wednesdays regardless of the closedDays array
   const isDateDisabled = (date: Date) => {
-    if (!restaurantStatus.closedDays) return false;
-    
-    // Check if day is in closed days
-    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
-    if (restaurantStatus.closedDays.includes(dayOfWeek)) {
+    // Always block Wednesdays
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 3) { // Wednesday is day 3 (0-indexed, Sunday is 0)
       return true;
+    }
+    
+    // Check if day is in other closed days from the restaurant status
+    if (restaurantStatus.closedDays) {
+      const dayName = date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT', { weekday: 'long' });
+      if (restaurantStatus.closedDays.includes(dayName)) {
+        return true;
+      }
     }
     
     // Check if date is in special closures
@@ -270,36 +399,36 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
 
   const ConfirmationMessage = () => (
     <div className="text-center space-y-6 py-8">
-      <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-      <h3 className="text-2xl font-bold text-green-700">Reservation Confirmed!</h3>
-      <div className="bg-green-50 p-6 rounded-lg">
-        <p className="text-gray-700 mb-4">
-          Your table has been reserved. We look forward to serving you!
+      <CheckCircle className="h-16 w-16 text-amber-500 mx-auto" />
+      <h3 className="text-2xl font-bold text-amber-400">{text.confirmationTitle}</h3>
+      <div className="bg-black/60 p-6 rounded-lg border border-amber-400/20">
+        <p className="text-gray-200 mb-4">
+          {text.confirmationMessage}
         </p>
         <div className="space-y-2 text-left">
           <div className="flex justify-between">
-            <span className="font-medium">Reservation ID:</span>
-            <span>{reservationId}</span>
+            <span className="font-medium text-amber-300">{text.reservationId}</span>
+            <span className="text-white">{reservationId}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-medium">Date:</span>
-            <span>{formData.date.toLocaleDateString()}</span>
+            <span className="font-medium text-amber-300">{text.date}</span>
+            <span className="text-white">{formData.date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT')}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-medium">Time:</span>
-            <span>{formData.time}</span>
+            <span className="font-medium text-amber-300">{text.time}</span>
+            <span className="text-white">{formData.time}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-medium">Party Size:</span>
-            <span>{formData.persons}</span>
+            <span className="font-medium text-amber-300">{text.partySize}</span>
+            <span className="text-white">{formData.persons}</span>
           </div>
         </div>
       </div>
       <button
         onClick={onClose}
-        className="bg-blue-900 text-white py-3 px-6 rounded-md hover:bg-blue-800 transition-colors"
+        className="bg-amber-500 text-black font-bold py-3 px-6 rounded-md hover:bg-amber-400 transition-colors"
       >
-        Done
+        {text.done}
       </button>
     </div>
   );
@@ -307,69 +436,69 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full m-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
+      <div className="bg-black rounded-lg p-8 max-w-md w-full m-4 max-h-[90vh] overflow-y-auto border border-amber-400/20 shadow-2xl text-white">
         {showConfirmation ? (
           <ConfirmationMessage />
         ) : showLargeGroupMessage ? (
           <div className="text-center space-y-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-blue-900">GROUP RESERVATION</h2>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <h2 className="text-2xl font-bold text-amber-400">{text.largeGroupTitle}</h2>
+              <button onClick={onClose} className="text-gray-400 hover:text-amber-400">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <Users className="h-12 w-12 text-blue-800 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-blue-900 mb-2">Large Group Booking</h3>
-              <p className="text-gray-700 mb-4">
-                For groups of 7 or more, we require a phone confirmation to ensure we can accommodate your party.
+            <div className="bg-black/60 p-6 rounded-lg border border-amber-400/20">
+              <Users className="h-12 w-12 text-amber-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-amber-400 mb-2">{text.largeGroupHeading}</h3>
+              <p className="text-gray-300 mb-4">
+                {text.largeGroupMessage}
               </p>
-              <div className="flex items-center justify-center text-blue-900 font-bold text-xl">
+              <div className="flex items-center justify-center text-amber-400 font-bold text-xl">
                 <Phone className="h-6 w-6 mr-2" />
-                <a href="tel:8010888216" className="hover:underline">Call 8010888216</a>
+                <a href="tel:+351920221805" className="hover:underline">{text.callNow}</a>
               </div>
             </div>
             
             <button
               onClick={() => setShowLargeGroupMessage(false)}
-              className="text-blue-600 hover:underline"
+              className="text-amber-400 hover:underline"
             >
-              Go back to reservation form
+              {text.goBack}
             </button>
           </div>
         ) : isLoading ? (
           <div className="text-center py-10">
-            <p>Loading reservation system...</p>
+            <p className="text-amber-300">{text.loading}</p>
           </div>
         ) : (
           <>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-blue-900">TABLE RESERVATION</h2>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <h2 className="text-2xl font-bold text-amber-400">{text.title}</h2>
+              <button onClick={onClose} className="text-gray-400 hover:text-amber-400">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            {restaurantStatus.closedDays && restaurantStatus.closedDays.includes('Sunday') && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            {restaurantStatus.closedDays && restaurantStatus.closedDays.includes('Wednesday') && (
+              <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
                 <div className="flex">
                   <div className="ml-3">
-                    <p className="text-red-700 font-medium">SUNDAY CLOSED!</p>
-                    <p className="text-sm text-red-600">Please select another day for your reservation.</p>
+                    <p className="text-amber-400 font-medium">{text.closedDay}</p>
+                    <p className="text-sm text-amber-300">{text.closedDayMessage}</p>
                   </div>
                 </div>
               </div>
             )}
 
             {!restaurantStatus.isOpen && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+              <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
                 <div className="flex">
                   <div className="ml-3">
-                    <p className="text-yellow-700 font-medium">NOTICE</p>
-                    <p className="text-sm text-yellow-600">
-                      The restaurant is currently closed for regular service. You can still make reservations for future dates.
+                    <p className="text-amber-400 font-medium">{text.restaurantClosed}</p>
+                    <p className="text-sm text-amber-300">
+                      {text.restaurantClosedMessage}
                     </p>
                   </div>
                 </div>
@@ -378,80 +507,80 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-4">
-                <h3 className="font-medium text-gray-800">Contact Information</h3>
+                <h3 className="font-medium text-amber-300">{text.contactInfo}</h3>
                 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
+                    <User className="h-5 w-5 text-amber-400" />
                   </div>
                   <input
                     type="text"
-                    placeholder="Full Name"
+                    placeholder={text.fullName}
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                  {errors.name && <p className="text-amber-500 text-sm mt-1">{errors.name}</p>}
                 </div>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-5 w-5 text-gray-400" />
+                    <Phone className="h-5 w-5 text-amber-400" />
                   </div>
                   <input
                     type="tel"
-                    placeholder="Phone Number"
+                    placeholder={text.phone}
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />
-                  {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                  {errors.phone && <p className="text-amber-500 text-sm mt-1">{errors.phone}</p>}
                 </div>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
+                    <Mail className="h-5 w-5 text-amber-400" />
                   </div>
                   <input
                     type="email"
-                    placeholder="Email Address"
+                    placeholder={text.email}
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />
-                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                  {errors.email && <p className="text-amber-500 text-sm mt-1">{errors.email}</p>}
                 </div>
               </div>
 
-              <div className="border-t pt-5 space-y-4">
-                <h3 className="font-medium text-gray-800">Reservation Details</h3>
+              <div className="border-t border-amber-400/20 pt-5 space-y-4">
+                <h3 className="font-medium text-amber-300">{text.reservationDetails}</h3>
                 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <Calendar className="h-5 w-5 text-amber-400" />
                   </div>
                   <DatePicker
                     selected={formData.date}
                     onChange={(date) => setFormData({...formData, date: date || new Date()})}
                     minDate={new Date()}
                     filterDate={date => !isDateDisabled(date)}
-                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />
-                  {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+                  {errors.date && <p className="text-amber-500 text-sm mt-1">{errors.date}</p>}
                 </div>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Clock className="h-5 w-5 text-gray-400" />
+                    <Clock className="h-5 w-5 text-amber-400" />
                   </div>
                   <select
                     value={formData.time}
                     onChange={(e) => setFormData({...formData, time: e.target.value})}
-                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
                     {timeSlots.length > 0 ? (
@@ -464,45 +593,47 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
                       <option value={formData.time}>{formData.time}</option>
                     )}
                   </select>
-                  {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time}</p>}
+                  {errors.time && <p className="text-amber-500 text-sm mt-1">{errors.time}</p>}
                 </div>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Users className="h-5 w-5 text-gray-400" />
+                    <Users className="h-5 w-5 text-amber-400" />
                   </div>
                   <select
                     value={formData.persons}
                     onChange={handlePersonsChange}
-                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
                     {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>{i + 1} {i === 0 ? 'person' : 'people'}</option>
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1} {i === 0 ? text.person : text.people}
+                      </option>
                     ))}
                   </select>
                   {parseInt(formData.persons) > 6 && (
-                    <p className="text-amber-600 text-sm mt-1">Groups of 7+ require phone confirmation</p>
+                    <p className="text-amber-400 text-sm mt-1">{text.largeGroupWarning}</p>
                   )}
                 </div>
               </div>
 
-              <div className="border-t pt-5 space-y-4">
-                <h3 className="font-medium text-gray-800">Special Requests</h3>
+              <div className="border-t border-amber-400/20 pt-5 space-y-4">
+                <h3 className="font-medium text-amber-300">{text.specialRequests}</h3>
                 
                 <div>
                   <select
                     value={formData.occasion}
                     onChange={(e) => setFormData({...formData, occasion: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
-                    <option value="">Select an occasion (optional)</option>
-                    <option value="birthday">Birthday</option>
-                    <option value="anniversary">Anniversary</option>
-                    <option value="business">Business Meal</option>
-                    <option value="date">Date Night</option>
-                    <option value="other">Other</option>
+                    <option value="">{text.occasion}</option>
+                    <option value="birthday">{text.occasions.birthday}</option>
+                    <option value="anniversary">{text.occasions.anniversary}</option>
+                    <option value="business">{text.occasions.business}</option>
+                    <option value="date">{text.occasions.date}</option>
+                    <option value="other">{text.occasions.other}</option>
                   </select>
                 </div>
 
@@ -510,44 +641,41 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose }) 
                   <select
                     value={formData.preferredSeating}
                     onChange={(e) => setFormData({...formData, preferredSeating: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    disabled={isSubmitting}
-                  >
-                    <option value="no preference">Seating Preference</option>
-                    <option value="indoor">Indoor</option>
-                    <option value="outdoor">Outdoor</option>
-                    <option value="window">Window</option>
-                    <option value="private">Private (if available)</option>
-                  </select>
-                </div>
-
-                <div className="relative">
-                  <div className="absolute top-3 left-3 pointer-events-none">
-                    <MessageSquare className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <textarea
-                    placeholder="Any special requests or dietary requirements?"
-                    value={formData.specialRequests}
-                    onChange={(e) => setFormData({...formData, specialRequests: e.target.value})}
-                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 h-24"
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-blue-900 text-white py-3 rounded-md hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isSubmitting || parseInt(formData.persons) > 6}
-              >
-                {isSubmitting ? 'Submitting...' : 'Book a Table'}
-              </button>
-            </form>
+                    className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
+                    disabled={isSubmitting}>
+                      <option value="no preference">{text.seating.noPreference}</option>
+                      <option value="indoor">{text.seating.indoor}</option>
+                      <option value="outdoor">{text.seating.outdoor}</option>
+                      <option value="window">{text.seating.window}</option>
+                      <option value="private">{text.seating.private}</option>
+                    </select>
+                    </div>
+                    
+                    <div>
+                      <textarea
+                        placeholder={text.requests}
+                        value={formData.specialRequests}
+                        onChange={(e) => setFormData({...formData, specialRequests: e.target.value})}
+                        className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
+                        rows={3}
+                        disabled={isSubmitting}
+                      ></textarea>
+                    </div>
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      className="w-full bg-amber-500 text-black font-bold py-3 px-6 rounded-md hover:bg-amber-400 transition-colors disabled:bg-amber-600 disabled:opacity-70"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? text.submitting : text.bookButton}
+                    </button>
+                    </form>
           </>
         )}
       </div>
     </div>
   );
-};
+}
 
 export default ReservationModal;
