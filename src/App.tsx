@@ -101,10 +101,17 @@ function App() {
               <div className="mt-6">
                 <h4 className="text-lg font-semibold text-amber-400">{footerText.followUs}</h4>
                 <div className="flex justify-center md:justify-start space-x-4 mt-2">
-                  <Facebook size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
-                  <Instagram size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
-                  <UtensilsCrossed size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
-                </div>
+  <a href="https://www.facebook.com/your-facebook-page" target="_blank" rel="noopener noreferrer">
+    <Facebook size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
+  </a>
+  <a href="https://www.instagram.com/bluewhalelagos?igsh=MTdyaTJuMGp0dTVkYw==" target="_blank" rel="noopener noreferrer">
+    <Instagram size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
+  </a>
+  <a href="https://www.thefork.com/restaurant/blue-whale-asian-fusion-restaurant-r723857" target="_blank" rel="noopener noreferrer">
+    <UtensilsCrossed size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
+  </a>
+</div>
+
               </div>
             </div>
 
@@ -127,7 +134,7 @@ function App() {
               <div className="w-full h-48 rounded-lg overflow-hidden shadow-lg mt-2">
                 <iframe
                   title="Restaurant Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3213.1046391779385!2d-8.67236!3d37.10136!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd1b31e07f6d7553%3A0x4016490adb0bfc7d!2sLargo%20Salazar%20Moscovo%2C%20Lote%204%2C%20Loja%20A%2C%208600-522%20Lagos!5e0!3m2!1sen!2spt!4v1616505234240!5m2!1sen!2spt"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3213.1046391779385!2d-8.673272!3d37.09243!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd1b31e07f6d7553%3A0x4016490adb0bfc7d!2sBlue%20Whale%20Restaurant!5e0!3m2!1sen!2spt!4v1616505234240!5m2!1sen!2spt"
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 

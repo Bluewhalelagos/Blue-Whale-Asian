@@ -5,17 +5,16 @@ interface AboutProps {
 }
 
 const About: React.FC<AboutProps> = ({ language = 'en' }) => {
-  // Define translations similar to other sections
   const translations = {
     en: {
       aboutUs: "About Us",
-      paragraph1: "With years of experience cooking in the finest restaurants, our chef has crafted a menu that takes you on a culinary journey through the best flavors of Asia.",
-      paragraph2: "Every dish is prepared with the freshest ingredients and meticulous attention to detail, ensuring an unforgettable dining experience that combines tradition with modern innovation."
+      paragraph1: "Nestled by the ocean, Blue Whale Restaurant in Lagos is a seafood lover’s paradise. With a commitment to fresh, locally sourced ingredients, we create culinary masterpieces that blend tradition with innovation.",
+      paragraph2: "From succulent lobster tails to grilled octopus, each dish is crafted to perfection. Pair your meal with our curated wine selection and enjoy breathtaking ocean views for a truly unforgettable dining experience."
     },
     pt: {
       aboutUs: "Sobre Nós",
-      paragraph1: "Com anos de experiência nos melhores restaurantes, o nosso chef criou um menu que o leva numa viagem culinária pelos melhores sabores da Ásia.",
-      paragraph2: "Cada prato é preparado com os ingredientes mais frescos e atenção meticulosa aos detalhes, garantindo uma experiência gastronómica inesquecível que combina tradição e inovação."
+      paragraph1: "Situado à beira-mar, o Blue Whale Restaurant em Lagos é um paraíso para os amantes de frutos do mar. Comprometemo-nos a usar ingredientes frescos e locais para criar pratos que combinam tradição e inovação.",
+      paragraph2: "Desde caudas de lagosta suculentas até polvo grelhado, cada prato é preparado com perfeição. Harmonize sua refeição com nossa seleção de vinhos e desfrute de vistas deslumbrantes do oceano para uma experiência gastronômica inesquecível."
     }
   };
 
@@ -38,7 +37,7 @@ const About: React.FC<AboutProps> = ({ language = 'en' }) => {
             <div className="absolute inset-0 bg-gradient-to-r from-amber-300/20 to-amber-500/20 mix-blend-overlay z-10 rounded-lg"></div>
             <img 
               src="https://images.unsplash.com/photo-1512212621149-107ffe572d2f?ixlib=rb-1.2.1&auto=format&fit=crop&w=2850&q=80"
-              alt="Chef preparing Asian fusion cuisine"
+              alt="Oceanfront dining at Blue Whale Restaurant"
               className="absolute inset-0 w-full h-full object-cover rounded-lg transform transition-transform duration-500 group-hover:scale-110"
             />
           </div>
