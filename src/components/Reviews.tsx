@@ -11,22 +11,44 @@ const translations = {
     title: "Customer Reviews",
     reviews: [
       {
-        name: "Sarah Chen",
+        name: "Katherine020",
+        location: "Scotland",
         rating: 5,
-        text: "The fusion of flavors here is incredible! The Blue Whale Special Ramen is a must-try.",
-        image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
+        text: "This restaurant was recommended to us and we are glad we went. What a nice place. Excellent service and tasty food. We will return.",
+        date: "January 20, 2025",
+        image: "https://i.postimg.cc/C17JjbJm/default-avatar-2020-44.jpg"
       },
       {
-        name: "Michael Rodriguez",
+        name: "Lennekevs",
+        location: "Rotterdam",
         rating: 5,
-        text: "Best Asian fusion restaurant in the city. The attention to detail in every dish is remarkable.",
-        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
+        text: "What a nice restaurant! You can sit here really nice, the service is friendly, and the food is unbelievably good! We will come back!",
+        date: "January 9, 2025",
+        image: "https://i.postimg.cc/85NtJZd7/default-avatar-2020-68.jpg"
       },
       {
-        name: "Emily Wong",
+        name: "Naomi v",
+        location: "Rotterdam",
         rating: 5,
-        text: "Amazing ambiance and even better food. The service is impeccable!",
-        image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
+        text: "Tasty dishes, lovely vegetarian options (I recommend the lemongrass soup), and kid-friendly. Would recommend it!",
+        date: "January 2025",
+        image: "https://i.postimg.cc/yxfQz0Zk/default-avatar-2020-32.jpg"
+      },
+      {
+        name: "Heather S",
+        location: "Unknown",
+        rating: 5,
+        text: "Love! Love! Love this place! Service was exceptional and food was even better. The Korean chicken wings were crispy and perfectly seasoned. I had the Pad Thai chicken. It was so flavorful. My husband said the buttered prawns might be his best meal ever!",
+        date: "September 2024",
+        image: "https://i.postimg.cc/mrM5Fc05/default-avatar-2020-63.jpg"
+      },
+      {
+        name: "Lesley E",
+        location: "Unknown",
+        rating: 5,
+        text: "We visited last night having heard from family and friends how good it was. Everything was freshly prepared. We all had different meals and all agreed they were full of flavor, very tasty, and high quality. Will be going back very soon to try some new dishes. There are plenty of vegetarian options as well. Staff are brilliant. Highly recommend you to try it as you won't be disappointed.",
+        date: "August 12, 2022",
+        image: "https://i.postimg.cc/C5K7JdQY/default-avatar-2020-14.jpg"
       }
     ]
   },
@@ -34,22 +56,44 @@ const translations = {
     title: "Avaliações dos Clientes",
     reviews: [
       {
-        name: "Sarah Chen",
+        name: "Katherine020",
+        location: "Escócia",
         rating: 5,
-        text: "A fusão de sabores aqui é incrível! O Ramen Especial Blue Whale é imperdível.",
-        image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
+        text: "Este restaurante foi recomendado para nós e ficamos felizes por termos ido. Que lugar agradável. Serviço excelente e comida saborosa. Voltaremos.",
+        date: "20 de janeiro de 2025",
+        image: "https://i.postimg.cc/C17JjbJm/default-avatar-2020-44.jpg"
       },
       {
-        name: "Michael Rodriguez",
+        name: "Lennekevs",
+        location: "Roterdã",
         rating: 5,
-        text: "O melhor restaurante de fusão asiática da cidade. A atenção aos detalhes em cada prato é notável.",
-        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
+        text: "Que restaurante agradável! O ambiente é ótimo, o atendimento é amigável e a comida é incrivelmente boa! Voltaremos!",
+        date: "9 de janeiro de 2025",
+        image: "https://i.postimg.cc/85NtJZd7/default-avatar-2020-68.jpg"
       },
       {
-        name: "Emily Wong",
+        name: "Naomi v",
+        location: "Roterdã",
         rating: 5,
-        text: "Ambiente incrível e comida ainda melhor. O serviço é impecável!",
-        image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
+        text: "Pratos saborosos, ótimas opções vegetarianas (recomendo a sopa de capim-limão) e um ambiente adequado para crianças. Recomendo!",
+        date: "janeiro de 2025",
+        image: "https://i.postimg.cc/yxfQz0Zk/default-avatar-2020-32.jpg"
+      },
+      {
+        name: "Heather S",
+        location: "Desconhecido",
+        rating: 5,
+        text: "Amo! Amo! Amo este lugar! O serviço foi excepcional e a comida foi ainda melhor. As asas de frango coreanas estavam crocantes e perfeitamente temperadas. Comi o Pad Thai de frango, que estava cheio de sabor. Meu marido disse que os camarões amanteigados podem ter sido a melhor refeição da vida dele!",
+        date: "setembro de 2024",
+        image: "https://i.postimg.cc/mrM5Fc05/default-avatar-2020-63.jpg"
+      },
+      {
+        name: "Lesley E",
+        location: "Desconhecido",
+        rating: 5,
+        text: "Visitamos na noite passada depois de ouvir de amigos e familiares o quão bom era. Tudo foi preparado na hora. Todos pedimos pratos diferentes e concordamos que eram cheios de sabor, muito gostosos e de alta qualidade. Voltaremos em breve para experimentar novos pratos. Há muitas opções vegetarianas também. A equipe é incrível. Recomendo muito que você experimente, pois não ficará desapontado.",
+        date: "12 de agosto de 2022",
+        image: "https://i.postimg.cc/C5K7JdQY/default-avatar-2020-14.jpg"
       }
     ]
   }
@@ -88,19 +132,25 @@ const Reviews: React.FC<ReviewsProps> = ({ language }) => {
   return (
     <section id="reviews" className="py-24 bg-black">
       <div className="container mx-auto px-6">
-        <div className="mb-16 text-center">
-          <h2 className="text-4xl font-bold text-amber-400 mb-2">{text.title}</h2>
-          <div className="w-24 h-1 bg-amber-500 mx-auto"></div>
-        </div>
+      <div className="mb-16 md:mb-24 text-center pb-6">
+      <h2 
+        className="text-4xl font-bold text-amber-400 mb-1" 
+        aria-label={text.title}
+      >
+        {text.title}
+      </h2>
+      <div className="w-24 h-1 bg-amber-500 mx-auto mb-16 "></div>
+    </div>
+    
         
-        <div className="max-w-6xl mx-auto relative h-96">
+        <div className="max-w-6xl mx-auto relative h-auto min-h-96 mt-16 md:mt-16">
           {/* Carousel container with perspective */}
-          <div className="perspective-container relative h-full w-full overflow-hidden">
+          <div className="perspective-container relative h-full w-full overflow-visible py-8">
             {/* Previous Review (Left Side) */}
             <div 
-              className="absolute top-0 left-0 w-4/5 lg:w-1/3 h-full transition-all duration-500 ease-in-out transform -translate-x-8 scale-90 opacity-60 z-10"
+              className="absolute top-1/2 -translate-y-1/2 left-0 w-4/5 lg:w-1/3 transition-all duration-500 ease-in-out z-10"
               style={{ 
-                transform: 'translateX(-6%) translateZ(-100px) rotateY(10deg) scale(0.9)',
+                transform: 'translateX(-6%) translateZ(-100px) translateY(-50%) rotateY(10deg) scale(0.9)',
                 filter: 'brightness(0.7)' 
               }}
             >
@@ -109,14 +159,11 @@ const Reviews: React.FC<ReviewsProps> = ({ language }) => {
             
             {/* Active Review (Center) */}
             <div 
-              className="absolute top-0 left-0 right-0 mx-auto w-4/5 lg:w-2/5 h-full transition-all duration-500 ease-in-out transform translate-y-0 scale-100 z-20"
+              className="absolute top-1/2 -translate-y-1/2 left-0 right-0 mx-auto w-4/5 lg:w-2/5 transition-all duration-500 ease-in-out z-20"
               style={{ 
-                transform: 'translateX(0) translateZ(0) rotateY(0deg) scale(1)',
+                transform: 'translateZ(0) translateY(-50%) rotateY(0deg)',
                 left: '50%',
-                marginLeft: '-40%',
-                '@media (min-width: 1024px)': {
-                  marginLeft: '-20%'
-                }
+                marginLeft: '-40%'
               }}
             >
               <ReviewCard review={text.reviews[activeIndex]} />
@@ -124,9 +171,9 @@ const Reviews: React.FC<ReviewsProps> = ({ language }) => {
             
             {/* Next Review (Right Side) */}
             <div 
-              className="absolute top-0 right-0 w-4/5 lg:w-1/3 h-full transition-all duration-500 ease-in-out transform translate-x-8 scale-90 opacity-60 z-10"
+              className="absolute top-1/2 -translate-y-1/2 right-0 w-4/5 lg:w-1/3 transition-all duration-500 ease-in-out z-10"
               style={{ 
-                transform: 'translateX(6%) translateZ(-100px) rotateY(-10deg) scale(0.9)',
+                transform: 'translateX(6%) translateZ(-100px) translateY(-50%) rotateY(-10deg) scale(0.9)',
                 filter: 'brightness(0.7)' 
               }}
             >
@@ -156,7 +203,7 @@ const Reviews: React.FC<ReviewsProps> = ({ language }) => {
           </button>
           
           {/* Dots indicator */}
-          <div className="flex justify-center mt-8 space-x-2 absolute bottom-0 left-0 right-0">
+          <div className="flex justify-center mt-8 space-x-2 absolute bottom-2 left-0 right-0">
             {text.reviews.map((_, index) => (
               <button
                 key={index}
@@ -183,19 +230,49 @@ const Reviews: React.FC<ReviewsProps> = ({ language }) => {
 // Separate component for each review card
 const ReviewCard = ({ review }: { review: any }) => {
   return (
-    <div className="h-full backdrop-blur-sm bg-black/40 rounded-lg border border-amber-400/20 shadow-xl p-8 text-center">
-      <img
-        src={review.image}
-        alt={review.name}
-        className="w-20 h-20 rounded-full mx-auto mb-6 object-cover border-2 border-amber-400"
-      />
-      <div className="flex justify-center mb-6">
+    <div className="bg-black/80 backdrop-blur-sm rounded-lg border border-amber-400/20 shadow-xl p-8 text-center flex flex-col h-full max-h-96 overflow-auto">
+      <div className="flex-shrink-0 flex justify-center mb-4">
+        <div className="w-20 h-20 relative">
+          <img
+            src={review.image}
+            alt={review.name}
+            className="w-full h-full rounded-full mx-auto object-cover border-2 border-amber-400"
+            onError={(e) => {
+              e.currentTarget.src = '/api/placeholder/80/80';
+              e.currentTarget.alt = 'Placeholder image';
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex justify-center mb-4 flex-shrink-0">
         {[...Array(review.rating)].map((_, i) => (
           <Star key={i} className="w-6 h-6 fill-current text-amber-400" />
         ))}
       </div>
-      <p className="text-gray-300 italic mb-6 text-lg">"{review.text}"</p>
-      <p className="font-semibold text-amber-300 text-lg">{review.name}</p>
+      <div className="flex-grow overflow-auto mb-4">
+        <p className="text-gray-300 italic text-lg">"{review.text}"</p>
+      </div>
+      <div className="flex-shrink-0">
+        <p className="font-semibold text-amber-300 text-lg">{review.name}</p>
+        <p className="text-amber-200/70 text-sm">{review.location}</p>
+        
+        {/* TripAdvisor badge */}
+        <div className="mt-3 flex justify-center">
+          <a 
+            href="#" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="inline-block hover:opacity-80 transition-opacity"
+            aria-label="View on TripAdvisor"
+          >
+            <img 
+              src="https://i.postimg.cc/CMGd4SyB/Tripadvisor-Svg.png" 
+              alt="TripAdvisor Verified" 
+              className="h-6"
+            />
+          </a>
+        </div>
+      </div>
     </div>
   );
 };

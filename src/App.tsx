@@ -107,10 +107,13 @@ function App() {
   <a href="https://www.instagram.com/bluewhalelagos?igsh=MTdyaTJuMGp0dTVkYw==" target="_blank" rel="noopener noreferrer">
     <Instagram size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
   </a>
-  <a href="https://www.thefork.com/restaurant/blue-whale-asian-fusion-restaurant-r723857" target="_blank" rel="noopener noreferrer">
-    <UtensilsCrossed size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
-  </a>
+  <UtensilsCrossed 
+    size={24} 
+    className="cursor-pointer hover:text-amber-400 transition-colors" 
+    onClick={handleBookTable} 
+  />
 </div>
+
 
               </div>
             </div>

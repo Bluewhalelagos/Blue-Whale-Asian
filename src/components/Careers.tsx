@@ -213,20 +213,17 @@ const Careers: React.FC<CareersProps> = ({ language }) => {
             animate="visible"
             variants={containerVariants}
           >
-          <motion.h2 
-          className="text-4xl font-bold text-amber-500 mb-4"
-          variants={titleVariants}
-          initial="visible"
-          animate="visible"
-          transition={{ delay: 0, duration: 0.5 }} // Reduce delay
-        >
-          {text.title}
-        </motion.h2>
-        
+            <h2 
+              className="text-4xl font-bold text-amber-400 mb-4"
+            
+            >
+              {text.title}
+            </h2>
             <motion.div 
               className="h-1 bg-amber-500 mx-auto mb-6"
               variants={underlineVariants}
-            ></motion.div>
+            >
+            </motion.div>
             <motion.p 
               className="text-gray-300"
               initial={{ opacity: 0 }}
@@ -262,12 +259,12 @@ const Careers: React.FC<CareersProps> = ({ language }) => {
             >
               <SparklesIcon className="w-6 h-6 text-amber-300" />
             </motion.div>
-            <motion.h2 
+            <h2 
               className="text-4xl font-bold text-amber-400"
-              variants={titleVariants}
+              
             >
               {text.title}
-            </motion.h2>
+            </h2>
             <motion.div
               animate={{ 
                 y: [0, -5, 0],
