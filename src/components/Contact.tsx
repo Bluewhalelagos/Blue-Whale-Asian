@@ -15,7 +15,7 @@ const translations = {
     phone: "Phone",
     email: "Email",
     hours: "Hours",
-    closed: "SUNDAY CLOSED",
+    closed: "WEDNESDAY CLOSED",
     nameLabel: "Name",
     emailLabel: "Email",
     messageLabel: "Message",
@@ -23,7 +23,7 @@ const translations = {
     sendingButton: "Sending...",
     successMessage: "Message sent successfully! We will get back to you soon.",
     errorMessage: "Failed to send message. Please try again.",
-    schedule: "Monday - Saturday: 11:00 AM - 10:00 PM"
+    schedule: "Thursday - Tuesday: 05:00 PM - 10:00 PM"
   },
   pt: {
     title: "Contacte-nos",
@@ -31,7 +31,7 @@ const translations = {
     phone: "Telefone",
     email: "Email",
     hours: "Horário",
-    closed: "DOMINGO FECHADO",
+    closed: "QUARTA-FEIRA FECHADO",
     nameLabel: "Nome",
     emailLabel: "Email",
     messageLabel: "Mensagem",
@@ -39,7 +39,7 @@ const translations = {
     sendingButton: "A enviar...",
     successMessage: "Mensagem enviada com sucesso! Entraremos em contacto em breve.",
     errorMessage: "Falha ao enviar mensagem. Por favor, tente novamente.",
-    schedule: "Segunda - Sábado: 11:00 - 22:00"
+    schedule: "Quinta - Terça: 17:00 - 22:00 "
   }
 };
 
@@ -108,7 +108,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
                 <Phone className="w-7 h-7 text-amber-400 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-white text-lg">{text.phone}</h3>
-                  <p className="text-gray-300">(555) 123-4567</p>
+                  <p className="text-gray-300"> +(351) 920 221 805 </p>
                 </div>
               </div>
               
@@ -116,7 +116,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
                 <Mail className="w-7 h-7 text-amber-400 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-white text-lg">{text.email}</h3>
-                  <p className="text-gray-300">info@bluewhalerestaurant.com</p>
+                  <p className="text-gray-300">bluewhalelagos@gmail.com </p>
                 </div>
               </div>
               
