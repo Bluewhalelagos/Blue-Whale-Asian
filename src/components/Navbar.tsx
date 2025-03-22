@@ -129,7 +129,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-32 h-auto" />
+            <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-40 h-auto" />
           </div>
 
           {/* Status Indicator - Desktop */}
