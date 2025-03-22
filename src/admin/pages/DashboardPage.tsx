@@ -64,7 +64,7 @@ const DashboardPage = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
-    openTime: '11:00 AM',
+    openTime: '17:00 PM',
     closeTime: '10:00 PM',
     lastUpdated: new Date().toISOString()
   });
@@ -247,7 +247,7 @@ const DashboardPage = () => {
                 className="rounded border border-gray-300 px-2 py-1"
                 value={restaurantStatus.openTime.split(' ')[0]}
                 onChange={(e) => {
-                  const newTime = e.target.value + ' AM';
+                  const newTime = e.target.value + ' PM';
                   updateRestaurantHours(newTime, restaurantStatus.closeTime);
                 }}
               />

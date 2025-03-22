@@ -41,7 +41,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
   const [dynamicTranslations, setDynamicTranslations] = useState<Record<string, string>>({});
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
-    openTime: '11:00 AM',
+    openTime: '17:00 PM',
     closeTime: '10:00 PM',
     lastUpdated: new Date().toISOString()
   });
