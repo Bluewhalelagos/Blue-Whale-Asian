@@ -172,26 +172,27 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
           className="relative h-64 md:h-90 lg:h-screen lg:max-h-[600px] overflow-hidden rounded-lg shadow-lg"
         >
           <AnimatePresence initial={false} custom={direction}>
-            <motion.div
-              key={currentIndex}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              className="absolute w-full h-full"
-            >
-              <img 
-                src={images[currentIndex].img} 
-                alt={images[currentIndex].alt}
-                className="w-full h-full object-contain"
-              />
-              <div className="absolute inset-0 bg-black/30 flex justify-center">
-                <div className="text-white text-center px-4">
-                  <div className="text-xl md:text-2xl font-bold">{images[currentIndex].alt}</div>
-                </div>
-              </div>
-            </motion.div>
+            {/* Move the subtitle div to the bottom */}
+<motion.div
+key={currentIndex}
+custom={direction}
+variants={slideVariants}
+initial="enter"
+animate="center"
+exit="exit"
+className="absolute w-full h-full"
+>
+<img 
+  src={images[currentIndex].img} 
+  alt={images[currentIndex].alt}
+  className="w-full h-full object-contain"
+/>
+<div className="absolute bottom-0 left-0 right-0 bg-black/60 py-3 px-4">
+  <div className="text-white text-center">
+    <div className="text-xl md:text-2xl font-bold">{images[currentIndex].alt}</div>
+  </div>
+</div>
+</motion.div>
           </AnimatePresence>
 
           {/* Navigation buttons */}
@@ -216,21 +217,21 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
           </button>
 
           {/* Indicator dots */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setDirection(index > currentIndex ? 1 : -1);
-                  setCurrentIndex(index);
-                }}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-amber-400' : 'bg-white/50 hover:bg-white/80'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
+          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+  {images.map((_, index) => (
+    <button
+      key={index}
+      onClick={() => {
+        setDirection(index > currentIndex ? 1 : -1);
+        setCurrentIndex(index);
+      }}
+      className={`w-3 h-3 rounded-full transition-colors ${
+        index === currentIndex ? 'bg-amber-400' : 'bg-white/50 hover:bg-white/80'
+      }`}
+      aria-label={`Go to slide ${index + 1}`}
+    />
+  ))}
+</div>
         </div>
       </div>
     </section>

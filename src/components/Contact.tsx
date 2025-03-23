@@ -98,7 +98,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-amber-300 mb-2">{text.nameLabel}</label>
+          <label htmlFor="name" className="block text-sm font-medium text-amber-300  mb-2">{text.nameLabel}</label>
           <input
             type="text"
             id="name"
