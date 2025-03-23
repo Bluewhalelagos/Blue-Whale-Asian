@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 
 interface ReviewsProps {
@@ -99,181 +99,183 @@ const translations = {
   }
 };
 
-const Reviews: React.FC<ReviewsProps> = ({ language }) => {
-  // Get the appropriate translations based on the current language
+const Reviews = ({ language = 'en' }: ReviewsProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const text = translations[language];
-  const [activeIndex, setActiveIndex] = useState(0);
-  const reviewsCount = text.reviews.length;
   
-  // Function to rotate to next review
-  const nextReview = () => {
-    setActiveIndex((prevIndex) => (prevIndex + 1) % reviewsCount);
+  const handleNext = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setCurrentIndex((prev) => (prev + 1) % text.reviews.length);
+    setTimeout(() => setIsAnimating(false), 500);
   };
   
-  // Function to rotate to previous review
-  const prevReview = () => {
-    setActiveIndex((prevIndex) => (prevIndex - 1 + reviewsCount) % reviewsCount);
+  const handlePrev = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setCurrentIndex((prev) => (prev - 1 + text.reviews.length) % text.reviews.length);
+    setTimeout(() => setIsAnimating(false), 500);
   };
   
-  // Auto-rotate every 5 seconds
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
-      nextReview();
-    }, 5000);
+      handleNext();
+    }, 7000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [currentIndex]);
   
-  // Get the indices of the previous, current, and next reviews
-  const getReviewIndex = (offset: number) => {
-    return (activeIndex + offset + reviewsCount) % reviewsCount;
-  };
-
   return (
-    <section id="reviews" className="py-24 bg-black">
-      <div className="container mx-auto px-6">
-      <div className="mb-16 md:mb-24 text-center pb-6">
-      <h2 
-        className="text-4xl font-bold text-amber-400 mb-1" 
-        aria-label={text.title}
-      >
-        {text.title}
-      </h2>
-      <div className="w-24 h-1 bg-amber-500 mx-auto mb-16 "></div>
-    </div>
-    
-        
-        <div className="max-w-6xl mx-auto relative h-auto min-h-96 mt-16 md:mt-16">
-          {/* Carousel container with perspective */}
-          <div className="perspective-container relative h-full w-full overflow-visible py-8">
-            {/* Previous Review (Left Side) */}
-            <div 
-              className="absolute top-1/2 -translate-y-1/2 left-0 w-4/5 lg:w-1/3 transition-all duration-500 ease-in-out z-10"
-              style={{ 
-                transform: 'translateX(-6%) translateZ(-100px) translateY(-50%) rotateY(10deg) scale(0.9)',
-                filter: 'brightness(0.7)' 
-              }}
-            >
-              <ReviewCard review={text.reviews[getReviewIndex(-1)]} />
-            </div>
-            
-            {/* Active Review (Center) */}
-            <div 
-              className="absolute top-1/2 -translate-y-1/2 left-0 right-0 mx-auto w-4/5 lg:w-2/5 transition-all duration-500 ease-in-out z-20"
-              style={{ 
-                transform: 'translateZ(0) translateY(-50%) rotateY(0deg)',
-                left: '50%',
-                marginLeft: '-40%'
-              }}
-            >
-              <ReviewCard review={text.reviews[activeIndex]} />
-            </div>
-            
-            {/* Next Review (Right Side) */}
-            <div 
-              className="absolute top-1/2 -translate-y-1/2 right-0 w-4/5 lg:w-1/3 transition-all duration-500 ease-in-out z-10"
-              style={{ 
-                transform: 'translateX(6%) translateZ(-100px) translateY(-50%) rotateY(-10deg) scale(0.9)',
-                filter: 'brightness(0.7)' 
-              }}
-            >
-              <ReviewCard review={text.reviews[getReviewIndex(1)]} />
-            </div>
-          </div>
-          
-          {/* Navigation buttons */}
-          <button 
-            onClick={prevReview}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30 bg-amber-400/80 hover:bg-amber-500 rounded-full p-2 text-black"
-            aria-label="Previous review"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          <button 
-            onClick={nextReview}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-30 bg-amber-400/80 hover:bg-amber-500 rounded-full p-2 text-black"
-            aria-label="Next review"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-          
-          {/* Dots indicator */}
-          <div className="flex justify-center mt-8 space-x-2 absolute bottom-2 left-0 right-0">
-            {text.reviews.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveIndex(index)}
-                className={`w-3 h-3 rounded-full ${index === activeIndex ? 'bg-amber-400' : 'bg-amber-400/30'}`}
-                aria-label={`Go to review ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+    <section 
+      className="py-16 text-white overflow-hidden relative bg-black"
+      style={{
+        backgroundImage: 'url("https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=1260")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Background overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/55 backdrop-blur-sm"></div>
       
-      {/* Add custom styles for 3D effect */}
-      <style jsx>{`
-        .perspective-container {
-          perspective: 1000px;
-          transform-style: preserve-3d;
-        }
-      `}</style>
-    </section>
-  );
-};
-
-// Separate component for each review card
-const ReviewCard = ({ review }: { review: any }) => {
-  return (
-    <div className="bg-black/80 backdrop-blur-sm rounded-lg border border-amber-400/20 shadow-xl p-8 text-center flex flex-col h-full max-h-96 overflow-auto">
-      <div className="flex-shrink-0 flex justify-center mb-4">
-        <div className="w-20 h-20 relative">
-          <img
-            src={review.image}
-            alt={review.name}
-            className="w-full h-full rounded-full mx-auto object-cover border-2 border-amber-400"
-            onError={(e) => {
-              e.currentTarget.src = '/api/placeholder/80/80';
-              e.currentTarget.alt = 'Placeholder image';
-            }}
-          />
+      <div className="container mx-auto px-4 relative z-10">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-amber-400 relative inline-block pb-2">
+            {text.title}
+            <span className="absolute bottom-0 left-1/2 w-20 h-1 bg-amber-500 transform -translate-x-1/2"></span>
+          </h2>
+          
+          {/* Restaurant rating summary */}
+          <div className="mt-8 flex flex-col items-center">
+            <h3 className="text-xl md:text-3xl font-bold text-white">Blue Whale - Asian Fusion Restaurant</h3>
+            <div className="flex items-center mt-2">
+              <div className="text-4xl font-bold text-amber-400 mr-4">4.7</div>
+              <div className="flex">
+                {[1, 2, 3, 4].map(i => (
+                  <Star key={i} className="w-6 h-6 text-amber-400 fill-current" />
+                ))}
+                <Star className="w-6 h-6 text-amber-400" strokeWidth={2} />
+              </div>
+            </div>
+            <div className="text-gray-400 mt-1">
+              Based on 136 reviews
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="flex justify-center mb-4 flex-shrink-0">
-        {[...Array(review.rating)].map((_, i) => (
-          <Star key={i} className="w-6 h-6 fill-current text-amber-400" />
-        ))}
-      </div>
-      <div className="flex-grow overflow-auto mb-4">
-        <p className="text-gray-300 italic text-lg">"{review.text}"</p>
-      </div>
-      <div className="flex-shrink-0">
-        <p className="font-semibold text-amber-300 text-lg">{review.name}</p>
-        <p className="text-amber-200/70 text-sm">{review.location}</p>
         
-        {/* TripAdvisor badge */}
-        <div className="mt-3 flex justify-center">
-          <a 
-            href="#" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="inline-block hover:opacity-80 transition-opacity"
-            aria-label="View on TripAdvisor"
-          >
-            <img 
-              src="https://i.postimg.cc/CMGd4SyB/Tripadvisor-Svg.png" 
-              alt="TripAdvisor Verified" 
-              className="h-6"
-            />
-          </a>
+        {/* Reviews Carousel */}
+        <div className="max-w-4xl mx-auto relative">
+          <div className="relative overflow-hidden min-h-96 rounded-xl shadow-2xl">
+            {/* Current Review */}
+            <div className={`transition-all duration-500 ease-in-out ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+              <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-md border border-amber-500/30 rounded-xl p-8 md:p-10">
+                {/* Content layout */}
+                <div className="flex flex-col md:flex-row gap-8">
+                  {/* Profile section */}
+                  <div className="flex flex-col items-center md:w-1/3">
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-amber-400 shadow-lg mb-4">
+                      <img 
+                        src={text.reviews[currentIndex].image} 
+                        alt={text.reviews[currentIndex].name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/api/placeholder/100/100';
+                          e.currentTarget.alt = 'Profile placeholder';
+                        }}
+                      />
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-amber-300">{text.reviews[currentIndex].name}</h3>
+                    <p className="text-amber-300/70 text-sm mb-3">{text.reviews[currentIndex].location}</p>
+                    
+                    {/* Rating stars */}
+                    <div className="flex mb-2">
+                      {[...Array(text.reviews[currentIndex].rating)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 text-amber-400 fill-current" />
+                      ))}
+                    </div>
+                    
+                    <p className="text-gray-400 text-xs">{text.reviews[currentIndex].date}</p>
+                    
+                    {/* Verified badge */}
+                    <div className="mt-4 bg-gray-800/50 rounded-full px-3 py-1 flex items-center border border-amber-500/20">
+                      <img 
+                        src="https://i.postimg.cc/CMGd4SyB/Tripadvisor-Svg.png" 
+                        alt="TripAdvisor Verified" 
+                        className="h-4 mr-2"
+                      />
+                      <span className="text-xs text-gray-300">Verified Review</span>
+                    </div>
+                  </div>
+                  
+                  {/* Review text */}
+                  <div className="md:w-2/3 flex items-center">
+                    <p className="text-gray-200 text-lg md:text-xl leading-relaxed italic">
+                      {text.reviews[currentIndex].text}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Navigation controls */}
+          <div className="flex justify-between items-center mt-8">
+            <button 
+              onClick={handlePrev}
+              className="bg-amber-500 hover:bg-amber-600 text-black rounded-full p-3 shadow-lg transform transition-transform hover:scale-105"
+              aria-label="Previous review"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            {/* Pagination dots */}
+            <div className="flex space-x-2">
+              {text.reviews.map((_, index) => (
+                <button 
+                  key={index}
+                  onClick={() => {
+                    setIsAnimating(true);
+                    setCurrentIndex(index);
+                    setTimeout(() => setIsAnimating(false), 500);
+                  }}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentIndex 
+                      ? 'bg-amber-500 w-8' 
+                      : 'bg-amber-500/30 hover:bg-amber-500/50'
+                  }`}
+                  aria-label={`Go to review ${index + 1}`}
+                />
+              ))}
+            </div>
+            
+            <button 
+              onClick={handleNext}
+              className="bg-amber-500 hover:bg-amber-600 text-black rounded-full p-3 shadow-lg transform transition-transform hover:scale-105"
+              aria-label="Next review"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* View all reviews link */}
+          <div className="text-center mt-8">
+            <a 
+              href="https://www.tripadvisor.com/Restaurant_Review-g189117-d23844421-Reviews-or75-Blue_Whale_Asian_Fusion_Restaurant-Lagos_Faro_District_Algarve.html#REVIEWS" 
+              className="inline-block bg-transparent border-2 border-amber-500 text-amber-400 font-semibold py-2 px-6 rounded-full hover:bg-amber-500 hover:text-black transition-all duration-300"
+            >
+              View All 136 Reviews
+            </a>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

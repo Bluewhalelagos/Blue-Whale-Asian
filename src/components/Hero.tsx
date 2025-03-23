@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+// Make sure this path is correct
+import logoImage from '../BlueWhale-Final-logo.png';
 
 interface HeroProps {
   onBookTable: () => void;
@@ -102,6 +104,24 @@ const Hero: React.FC<HeroProps> = ({ onBookTable, language }) => {
       {/* Main Content with Animations */}
       <div className="relative h-full flex items-center justify-center text-center">
         <div className="container mx-auto px-6">
+          {/* Logo positioned above the title with white circular background */}
+          {/* Logo positioned above the title with white circular background */}
+<motion.div 
+className="mb-8 flex justify-center"
+initial={{ opacity: 0, y: -20 }}
+animate={{ opacity: 1, y: 0 }}
+transition={{ duration: 0.8 }}
+>
+<div className="w-32 h-32 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+  <img 
+    src={logoImage} 
+    alt="Blue Whale Asian Fusion Logo" 
+    className="w-32 h-30 md:w-28 " 
+    onError={(e) => console.error("Logo failed to load", e)}
+  />
+</div>
+</motion.div>
+          
           {/* Animated Heading */}
           <motion.h1 
             className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg"
@@ -109,7 +129,7 @@ const Hero: React.FC<HeroProps> = ({ onBookTable, language }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            {text.heading.split(' ').map((word, i) => (
+            {text.heading.split('  ').map((word, i) => (
               <motion.span
                 key={i}
                 className="inline-block"

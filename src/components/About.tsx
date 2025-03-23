@@ -181,7 +181,7 @@ const About: React.FC<AboutProps> = ({ language = 'en' }) => {
             <div className="absolute inset-0 bg-gradient-to-r from-amber-300/20 to-amber-500/20 mix-blend-overlay z-10 rounded-lg"></div>
             
             <motion.img 
-              src="https://images.unsplash.com/photo-1512212621149-107ffe572d2f?ixlib=rb-1.2.1&auto=format&fit=crop&w=2850&q=80"
+              src="https://i.postimg.cc/pLHKMWdg/Interior.jpg"
               alt="Oceanfront dining at Blue Whale Restaurant"
               className="absolute inset-0 w-full h-full object-cover rounded-lg transform transition-transform duration-700 group-hover:scale-110"
               whileHover={{ scale: 1.05 }}
