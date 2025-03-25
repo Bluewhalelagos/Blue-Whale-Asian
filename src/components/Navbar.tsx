@@ -133,10 +133,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
           </div>
 
           {/* Status Indicator - Desktop */}
-          <div className="hidden md:flex items-center">
-            <StatusIndicator />
-          </div>
-
+          
           {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8">
             <a href="#" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('homeLink')}</a>
@@ -191,23 +188,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
         >
           <div className={`px-2 pt-2 pb-3 space-y-1 ${scrolled ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {/* Full status display in mobile menu */}
-            <div className={`flex items-center justify-between px-3 py-2 mb-2 rounded transition-all duration-300 ${
-              restaurantStatus.isOpen 
-                ? 'bg-green-500/20 border-l-4 border-green-500' 
-                : 'bg-red-500/20 border-l-4 border-red-500'
-            }`}>
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-2" />
-                <span className="font-medium">
-                  {restaurantStatus.isOpen ? t('wereOpen') : t('wereClosed')}
-                </span>
-              </div>
-              <div className="text-xs">
-                {restaurantStatus.isOpen 
-                  ? `${t('until')} ${restaurantStatus.closeTime}` 
-                  : `${t('opensAt')} ${restaurantStatus.openTime}`}
-              </div>
-            </div>
+            
             
             <a href="#" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('homeLink')}</a>
             <a href="#about" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('aboutLink')}</a>

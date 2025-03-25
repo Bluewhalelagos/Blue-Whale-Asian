@@ -40,7 +40,7 @@ const Delivery: React.FC<DeliveryProps> = ({ language }) => {
             <p className="text-gray-300">{text.uberEatsInfo}</p>
             
             <a 
-              href="https://www.ubereats.com/pt-en/store/blue-whale/LGjKJ7FRQKG0Cem15PZSGA" 
+              href="https://www.ubereats.com/store/blue-whale/LGjKJ7FRQKG0Cem15PZSGA?diningMode=DELIVERY" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="inline-flex items-center bg-amber-500 text-black font-bold px-6 py-3 rounded-md hover:bg-amber-400 transition-colors"

@@ -104,7 +104,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
             id="name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="block w-full rounded-md border-amber-600/30 bg-black/70 text-white shadow-sm focus:border-amber-500 focus:ring-amber-500 placeholder-gray-500"
+            className="block w-full rounded-md border-amber-600/30 bg-black/70 text-white shadow-sm focus:border-amber-500 focus:ring-amber-500 placeholder-gray-500 glowy-placeholder"
             required
             disabled={isSubmitting}
           />
@@ -117,7 +117,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
             id="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="block w-full rounded-md border-amber-600/30 bg-black/70 text-white shadow-sm focus:border-amber-500 focus:ring-amber-500 placeholder-gray-500"
+            className="block w-full rounded-md border-amber-600/30 bg-black/70 text-white shadow-sm focus:border-amber-500 focus:ring-amber-500 placeholder-gray-500 glowy-placeholder"
             required
             disabled={isSubmitting}
           />
@@ -130,7 +130,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
             rows={4}
             value={formData.message}
             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-            className="block w-full rounded-md border-amber-600/30 bg-black/70 text-white shadow-sm focus:border-amber-500 focus:ring-amber-500 placeholder-gray-500"
+            className="block w-full rounded-md border-amber-600/30 bg-black/70 text-white shadow-sm focus:border-amber-500 focus:ring-amber-500 placeholder-gray-500 glowy-placeholder"
             required
             disabled={isSubmitting}
           ></textarea>

@@ -12,7 +12,7 @@ const translations = {
     subtitle: "Blue Whale Asian Fusion",
     clickToOpen: "Click to open",
     closeMenu: "Close Menu",
-    description: "Food is an integral part of Asian culture and heritage. The signature menu at Blue Whale Lagos celebrates Asian cuisine with an extensive selection of dishes. From rich and aromatic curries to delicately prepared Ramen, our mission is to bring a taste of Asian fusion cuisine to your table.",
+    description: "FOOD IS AN INTEGRAL PART OF ASIAN CULTURE AND HERITAGE. THE SIGNATURE MENU AT BLUE WHALE LAGOS CELEBRATES ASIAN CUISINE WITH AN EXTENSIVE SELECTION OF DISHES. FROM RICH AND AROMATIC CURRIES TO DELICATELY PREPARED RAMEN, OUR MISSION IS TO BRING A TASTE OF ASIAN FUSION CUISINE TO YOUR TABLE.",
     viewMenu: "View Our Menu"
   },
   pt: {

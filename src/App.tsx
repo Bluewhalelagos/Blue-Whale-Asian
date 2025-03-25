@@ -13,6 +13,7 @@ import Delivery from './components/Delivery';
 import Contact from './components/Contact';
 import ReservationModal from './components/ReservationModal';
 import logoImage from './BlueWhale-Final-logo1.png';
+import DrinksSection from './components/DrinksSection';
 
 // Define translations for the footer
 const footerTranslations = {
@@ -70,6 +71,7 @@ function App() {
         <About language={language} />
         <Gallery language={language} />
         <MenuSection language={language} />
+        <DrinksSection language={language} />
         <Reviews language={language} />
         <Careers language={language} />
         <Delivery language={language} />

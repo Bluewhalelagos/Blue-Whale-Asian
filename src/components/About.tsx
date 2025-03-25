@@ -9,14 +9,14 @@ interface AboutProps {
 const About: React.FC<AboutProps> = ({ language = 'en' }) => {
   const translations = {
     en: {
-      aboutUs: "About Us",
-      paragraph1: "Nestled by the ocean, Blue Whale Restaurant in Lagos is a seafood lover's paradise. With a commitment to fresh, locally sourced ingredients, we create culinary masterpieces that blend tradition with innovation.",
-      paragraph2: "From succulent lobster tails to grilled octopus, each dish is crafted to perfection. Pair your meal with our curated wine selection and enjoy breathtaking ocean views for a truly unforgettable dining experience."
+      aboutUs: "Innovation with Elegance.",
+      paragraph1: "Founded in 2022, Blue Whale Lagos celebrates Asian Fusion cuisine through innovative techniques, with locally sourced freshest ingredients and contemporary flair.",
+      paragraph2: "The kitchen is led by our talented chef whose passion lies in crafting uniquely rooted yet modern dishes. Every dish is prepared with meticulous attention to detail, ensuring an unforgettable dining experience with succulent from the wok to Special Lamb stew, each dish is crafted to perfection. Pair your meal with our curated wine selection and enjoy a truly unforgettable dining experience. Visit us and discover Blue Whale’s Fusion Feast."
     },
     pt: {
-      aboutUs: "Sobre Nós",
-      paragraph1: "Situado à beira-mar, o Blue Whale Restaurant em Lagos é um paraíso para os amantes de frutos do mar. Comprometemo-nos a usar ingredientes frescos e locais para criar pratos que combinam tradição e inovação.",
-      paragraph2: "Desde caudas de lagosta suculentas até polvo grelhado, cada prato é preparado com perfeição. Harmonize sua refeição com nossa seleção de vinhos e desfrute de vistas deslumbrantes do oceano para uma experiência gastronômica inesquecível."
+      aboutUs: "Inovação com Elegância.",
+      paragraph1: "Fundado em 2022, o Blue Whale Lagos celebra a culinária de Fusão Asiática através de técnicas inovadoras, com os ingredientes mais frescos e um toque contemporâneo.",
+      paragraph2: "A cozinha é liderada pelo nosso talentoso chef, cuja paixão reside na criação de pratos unicamente enraizados, mas modernos. Cada prato é preparado com atenção meticulosa aos detalhes, garantindo uma experiência gastronômica inesquecível, desde pratos suculentos preparados no wok até o Ensopado Especial de Cordeiro, cada prato é feito com perfeição. Harmonize sua refeição com nossa seleção de vinhos e desfrute de uma experiência verdadeiramente inesquecível. Visite-nos e descubra o Banquete de Fusão do Blue Whale."
     }
   };
 

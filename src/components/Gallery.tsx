@@ -35,27 +35,27 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
   const images = [
     {
       img: "https://i.postimg.cc/76nnmD9x/image4.jpg",
-      alt: "Sushi platter"
+      alt: "Ramen"
     },
     {
       img: "https://i.postimg.cc/x8jyZ7pL/image2.jpg",
-      alt: "Asian noodle soup"
+      alt: "Beef Rendang"
     },
     {
       img: "https://i.postimg.cc/vTPLwzCk/image3.jpg",
-      alt: "Dim sum selection"
+      alt: "Pad Thai"
     },
     {
       img: "https://i.postimg.cc/fW5vdzkC/Image1.jpg",
-      alt: "Restaurant interior"
+      alt: "BBQ Ribs"
     },
     {
       img: "https://i.postimg.cc/dt1jmbyY/image5.jpg",
-      alt: "Restaurant interior"
+      alt: "Udon Noodles"
     },
     {
       img: "https://i.postimg.cc/SNv7Zg6z/image6.jpg",
-      alt: "Restaurant interior"
+      alt: "Special Curry"
     }
   ];
 

@@ -11,16 +11,17 @@ interface HeroProps {
 // Define translations for the Hero component
 const translations = {
   en: {
-    heading: "Experience the Fusion of Flavors from Across Asia!",
-    subheading: "Embark on a culinary journey through the finest Asian cuisines, expertly crafted and beautifully presented.",
+    subheading: "Blue Whale Lagos is open for dine-in and take away from Thursday to Tuesday with dinner service available from 5:00 PM to 10:00 PM.",
+    heading: "Embark on a culinary journey through the finest Asian cuisines, expertly crafted and beautifully presented.",
     buttonText: "Book Your Table"
   },
   pt: {
-    heading: "Experimente a Fusão de Sabores de Toda a Ásia!",
-    subheading: "Embarque numa jornada culinária pelas melhores cozinhas asiáticas, habilmente elaboradas e lindamente apresentadas.",
+    subheading: "O Blue Whale Lagos está aberto para refeições no local e para levar de quinta a terça-feira, com serviço de jantar disponível das 17h00 às 22h00.",
+    heading: "Embarque numa jornada culinária pelas melhores cozinhas asiáticas, habilmente elaboradas e lindamente apresentadas.",
     buttonText: "Reserve Sua Mesa"
   }
 };
+
 
 const Hero: React.FC<HeroProps> = ({ onBookTable, language }) => {
   // Get the appropriate translations based on the current language
