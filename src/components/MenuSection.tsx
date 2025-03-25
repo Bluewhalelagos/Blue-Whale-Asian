@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { UtensilsCrossed } from "lucide-react";
+import { UtensilsCrossed, AlertTriangle } from "lucide-react";
 
 interface MenuSectionProps {
   language: 'en' | 'pt';
@@ -13,7 +13,19 @@ const translations = {
     clickToOpen: "Click to open",
     closeMenu: "Close Menu",
     description: "FOOD IS AN INTEGRAL PART OF ASIAN CULTURE AND HERITAGE. THE SIGNATURE MENU AT BLUE WHALE LAGOS CELEBRATES ASIAN CUISINE WITH AN EXTENSIVE SELECTION OF DISHES. FROM RICH AND AROMATIC CURRIES TO DELICATELY PREPARED RAMEN, OUR MISSION IS TO BRING A TASTE OF ASIAN FUSION CUISINE TO YOUR TABLE.",
-    viewMenu: "View Our Menu"
+    viewMenu: "View Our Menu",
+    disclaimer: {
+      title: "Important Notice",
+      content: "Pricing is in Euro (€). Guests with allergies and intolerances should inform a member of the team before placing an order for food or beverages.",
+      allergenInfo: "Allergen & Dietary Indicators:"
+    },
+    allergenLogos: {
+      vegan: "🌱 Vegan",
+      vegetarian: "🥬 Vegetarian", 
+      glutenFree: "🌾 Gluten Free",
+      lactoseFree: "🥛 Lactose Free",
+      nutFree: "🥜 Nut Free"
+    }
   },
   pt: {
     title: "Nosso Menu",
@@ -21,7 +33,19 @@ const translations = {
     clickToOpen: "Clique para abrir",
     closeMenu: "Fechar Menu",
     description: "A comida é uma parte essencial da cultura e herança asiática. O menu exclusivo do Blue Whale Lagos celebra a culinária asiática com uma ampla seleção de pratos. Desde curries ricos e aromáticos até Ramen delicadamente preparados, nossa missão é trazer o sabor da fusão asiática para a sua mesa.",
-    viewMenu: "Ver Nosso Menu"
+    viewMenu: "Ver Nosso Menu",
+    disclaimer: {
+      title: "Aviso Importante",
+      content: "Os preços estão em Euros (€). Convidados com alergias e intolerâncias devem informar um membro da equipe antes de fazer um pedido de comida ou bebida.",
+      allergenInfo: "Indicadores de Alérgenos e Dieta:"
+    },
+    allergenLogos: {
+      vegan: "🌱 Vegano",
+      vegetarian: "🥬 Vegetariano",
+      glutenFree: "🌾 Sem Glúten",
+      lactoseFree: "🥛 Sem Lactose",
+      nutFree: "🥜 Sem Nozes"
+    }
   }
 };
 
@@ -47,9 +71,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ language }) => {
       }}
     >
       {/* Overlay with pattern */}
-      <div className="absolute inset-0 bg-black bg-opacity-70 z-0" 
-        
-      />
+      <div className="absolute inset-0 bg-black bg-opacity-70 z-0" />
       
       <div className="container mx-auto px-6 relative z-10">
         <div className="mb-16 text-center">
@@ -63,26 +85,60 @@ const MenuSection: React.FC<MenuSectionProps> = ({ language }) => {
 
         <div className="max-w-3xl mx-auto">
           {isOpen ? (
-            <div className="backdrop-blur-md bg-black/60 rounded-lg border border-amber-400/20 shadow-xl p-6">
-              <div className="flex justify-end mb-4">
-                <button 
-                  onClick={() => setIsOpen(false)} 
-                  className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
-                >
-                  {text.closeMenu}
-                </button>
+            <>
+              <div className="backdrop-blur-md bg-black/60 rounded-lg border border-amber-400/20 shadow-xl p-6 mb-6">
+                <div className="flex justify-end mb-4">
+                  <button 
+                    onClick={() => setIsOpen(false)} 
+                    className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
+                  >
+                    {text.closeMenu}
+                  </button>
+                </div>
+                
+                {/* PDF Viewer */}
+                <div className="w-full aspect-[3/4] rounded overflow-hidden">
+                  <iframe
+                    src={pdfUrl}
+                    className="w-full h-full border-0"
+                    title="Blue Whale Asian Fusion Menu"
+                    allowFullScreen
+                  />
+                </div>
               </div>
-              
-              {/* PDF Viewer */}
-              <div className="w-full aspect-[3/4] rounded overflow-hidden">
-                <iframe
-                  src={pdfUrl}
-                  className="w-full h-full border-0"
-                  title="Blue Whale Asian Fusion Menu"
-                  allowFullScreen
-                />
+
+              {/* Disclaimer Section */}
+              <div className="bg-amber-900/20 border border-amber-400/30 rounded-lg p-6 text-center">
+                <div className="flex justify-center items-center mb-4">
+                  <AlertTriangle className="text-amber-400 mr-3" size={32} />
+                  <h3 className="text-2xl font-bold text-amber-400">
+                    {text.disclaimer.title}
+                  </h3>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-gray-300 max-w-2xl mx-auto mb-4">
+                    {text.disclaimer.content}
+                  </p>
+                </div>
+
+                <div className="bg-amber-900/30 rounded-lg p-4">
+                  <h4 className="text-amber-300 font-semibold mb-3">
+                    {text.disclaimer.allergenInfo}
+                  </h4>
+                  <div className="flex justify-center space-x-4 flex-wrap">
+                    {Object.entries(text.allergenLogos).map(([key, label]) => (
+                      <span 
+                        key={key} 
+                        className="text-sm text-gray-200 bg-black/30 px-3 py-1 rounded-full flex items-center"
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             <div 
               className="book-cover cursor-pointer mx-auto max-w-sm" 
