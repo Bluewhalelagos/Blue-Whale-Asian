@@ -14,10 +14,6 @@ const translations = {
     viewMenu: "Explore Drink Selection",
     clickToOpen: "Click to Discover Cocktails",
     closeMenu: "Close Drinks Menu",
-    barInfo: {
-      title: "Our Mixology Craft",
-      description: "Immerse yourself in a world of liquid artistry. Our bar is a sanctuary of innovation, where traditional techniques meet contemporary creativity. Each cocktail is a carefully composed symphony of flavors, crafted to surprise and delight."
-    },
     disclaimer: {
       title: "Important Notice",
       content: "Pricing is in Euro (€). Guests with allergies and intolerances should inform a member of the team before placing an order for food or beverages.",
@@ -38,10 +34,6 @@ const translations = {
     viewMenu: "Explorar Seleção de Bebidas",
     clickToOpen: "Clique para Descobrir Coquetéis",
     closeMenu: "Fechar Menu de Bebidas",
-    barInfo: {
-      title: "Nossa Arte da Mixologia",
-      description: "Mergulhe em um mundo de arte líquida. Nosso bar é um santuário de inovação, onde técnicas tradicionais encontram criatividade contemporânea. Cada coquetel é uma sinfonia cuidadosamente composta de sabores, criada para surpreender e encantar."
-    },
     disclaimer: {
       title: "Aviso Importante",
       content: "Os preços estão em Euros (€). Convidados com alergias e intolerâncias devem informar um membro da equipe antes de fazer um pedido de comida ou bebida.",
@@ -199,90 +191,29 @@ const DrinksSection: React.FC<DrinksSectionProps> = ({ language }) => {
           </div>
         </div>
 
-        {/* Bar Information Section */}
-        <div className="max-w-5xl mx-auto mb-16 grid md:grid-cols-2 gap-8 items-center">
-          <div className="relative overflow-hidden rounded-lg shadow-xl group">
-            <img 
-              src="https://i.postimg.cc/T3hL1Pqz/cocktails.jpg" 
-              alt="Blue Whale Mixology Bar" 
-              className="w-full h-96 object-cover transform group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="text-center">
-                <Cocktail className="mx-auto mb-4 text-amber-400" size={48} />
-                <p className="text-white text-lg font-semibold px-4">{text.barInfo.title}</p>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-3xl font-bold text-amber-400 mb-4">{text.barInfo.title}</h3>
-            <p className="text-gray-300 leading-relaxed">
-              {text.barInfo.description}
-            </p>
-            <div className="mt-6 flex space-x-4">
-              <Wine className="text-amber-400" size={32} />
-              <Martini className="text-amber-400" size={32} />
-            </div>
-          </div>
-        </div>
-
         {/* Menu Section */}
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto mb-12">
           {isOpen ? (
-            <>
-              <div className="backdrop-blur-md bg-black/60 rounded-lg border border-amber-400/20 shadow-xl p-6 mb-6">
-                <div className="flex justify-end mb-4">
-                  <button 
-                    onClick={() => setIsOpen(false)} 
-                    className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
-                  >
-                    {text.closeMenu}
-                  </button>
-                </div>
-                
-                {/* PDF Viewer */}
-                <div className="w-full aspect-[3/4] rounded overflow-hidden">
-                  <iframe
-                    src={pdfUrl}
-                    className="w-full h-full border-0"
-                    title="Blue Whale Drinks Menu"
-                    allowFullScreen
-                  />
-                </div>
+            <div className="backdrop-blur-md bg-black/60 rounded-lg border border-amber-400/20 shadow-xl p-6">
+              <div className="flex justify-end mb-4">
+                <button 
+                  onClick={() => setIsOpen(false)} 
+                  className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
+                >
+                  {text.closeMenu}
+                </button>
               </div>
-
-              {/* Disclaimer Section */}
-              <div className="bg-amber-900/20 border border-amber-400/30 rounded-lg p-6 text-center">
-                <div className="flex justify-center items-center mb-4">
-                  <AlertTriangle className="text-amber-400 mr-3" size={32} />
-                  <h3 className="text-2xl font-bold text-amber-400">
-                    {text.disclaimer.title}
-                  </h3>
-                </div>
-
-                <div className="mb-4">
-                  <p className="text-gray-300 max-w-2xl mx-auto mb-4">
-                    {text.disclaimer.content}
-                  </p>
-                </div>
-
-                <div className="bg-amber-900/30 rounded-lg p-4">
-                  <h4 className="text-amber-300 font-semibold mb-3">
-                    {text.disclaimer.allergenInfo}
-                  </h4>
-                  <div className="flex justify-center space-x-4 flex-wrap">
-                    {Object.entries(text.allergenLogos).map(([key, label]) => (
-                      <span 
-                        key={key} 
-                        className="text-sm text-gray-200 bg-black/30 px-3 py-1 rounded-full flex items-center"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              
+              {/* PDF Viewer */}
+              <div className="w-full aspect-[3/4] rounded overflow-hidden">
+                <iframe
+                  src={pdfUrl}
+                  className="w-full h-full border-0"
+                  title="Blue Whale Drinks Menu"
+                  allowFullScreen
+                />
               </div>
-            </>
+            </div>
           ) : (
             <div 
               className="book-cover cursor-pointer mx-auto max-w-sm" 
@@ -306,6 +237,40 @@ const DrinksSection: React.FC<DrinksSectionProps> = ({ language }) => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Always Visible Disclaimer Section */}
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-amber-900/20 border border-amber-400/30 rounded-lg p-6 text-center">
+            <div className="flex justify-center items-center mb-4">
+              <AlertTriangle className="text-amber-400 mr-3" size={32} />
+              <h3 className="text-2xl font-bold text-amber-400">
+                {text.disclaimer.title}
+              </h3>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-gray-300 max-w-2xl mx-auto mb-4">
+                {text.disclaimer.content}
+              </p>
+            </div>
+
+            <div className="bg-amber-900/30 rounded-lg p-4">
+              <h4 className="text-amber-300 font-semibold mb-3">
+                {text.disclaimer.allergenInfo}
+              </h4>
+              <div className="flex justify-center space-x-4 flex-wrap">
+                {Object.entries(text.allergenLogos).map(([key, label]) => (
+                  <span 
+                    key={key} 
+                    className="text-sm text-gray-200 bg-black/30 px-3 py-1 rounded-full flex items-center"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
