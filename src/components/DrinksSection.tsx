@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Martini, AlertTriangle, Wine, FileLock as Cocktail, ChevronLeft, ChevronRight } from "lucide-react";
+import { Martini, AlertTriangle, Wine, GlassWater as Cocktail, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DrinksSectionProps {
   language: 'en' | 'pt';
