@@ -1,11 +1,11 @@
-import React, { useState } from "react";
-import { Martini, AlertTriangle, Wine, Cocktail } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Martini, AlertTriangle, Wine, FileLock as Cocktail, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DrinksSectionProps {
   language: 'en' | 'pt';
 }
 
-// Translations for the Drinks Menu section (existing translations remain the same)
+// Translations for the Drinks Menu section
 const translations = {
   en: {
     title: "Cocktail Mixology",
@@ -57,14 +57,61 @@ const translations = {
   }
 };
 
+// Carousel images data
+const carouselImages = [
+  {
+    url: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
+    title: "Signature Martini",
+    description: "Our house special with a twist of citrus"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
+    title: "Tropical Paradise",
+    description: "Fresh fruits and premium spirits blend"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1560512823-829485b8bf24?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
+    title: "Smoky Elegance",
+    description: "Aged whiskey with aromatic bitters"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1578664182354-e3878469a19a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
+    title: "Garden Fresh",
+    description: "Herb-infused gin cocktail"
+  }
+];
+
 const DrinksSection: React.FC<DrinksSectionProps> = ({ language }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   
-  // Get the appropriate translations based on the current language
   const text = translations[language];
-
-  // Drinks menu PDF URL
   const pdfUrl = "https://drive.google.com/file/d/1KUj1bDZ30RWWVaF8I45jbAizdKAAcS01/preview";
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isAnimating) {
+        nextSlide();
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [currentSlide, isAnimating]);
+
+  const nextSlide = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+    setTimeout(() => setIsAnimating(false), 500);
+  };
+
+  const prevSlide = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setCurrentSlide((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+    setTimeout(() => setIsAnimating(false), 500);
+  };
 
   return (
     <section 
@@ -78,17 +125,78 @@ const DrinksSection: React.FC<DrinksSectionProps> = ({ language }) => {
         backgroundBlendMode: "overlay"
       }}
     >
-      {/* Overlay with pattern */}
       <div className="absolute inset-0 bg-black bg-opacity-70 z-0" />
       
       <div className="container mx-auto px-6 relative z-10">
         <div className="mb-16 text-center">
           <h2 className="text-4xl font-bold text-amber-400 mb-2">{text.title}</h2>
           <div className="w-24 h-1 bg-amber-500 mx-auto"></div>
-          
           <p className="text-gray-300 max-w-2xl mx-auto mt-8 leading-relaxed">
             {text.description}
           </p>
+        </div>
+
+        {/* Animated Carousel Section */}
+        <div className="max-w-6xl mx-auto mb-20">
+          <div className="relative overflow-hidden rounded-xl shadow-2xl">
+            <div className="relative h-[500px] md:h-[600px]">
+              {carouselImages.map((image, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 transition-transform duration-500 ease-in-out ${
+                    index === currentSlide 
+                      ? 'translate-x-0 opacity-100'
+                      : index < currentSlide 
+                        ? '-translate-x-full opacity-0'
+                        : 'translate-x-full opacity-0'
+                  }`}
+                >
+                  <div className="relative h-full">
+                    <img
+                      src={image.url}
+                      alt={image.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent">
+                      <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+                        <h3 className="text-3xl font-bold mb-2">{image.title}</h3>
+                        <p className="text-gray-300">{image.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Navigation Buttons */}
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+            >
+              <ChevronRight size={24} />
+            </button>
+
+            {/* Dots Navigation */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+              {carouselImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    currentSlide === index 
+                      ? 'bg-amber-400 w-4' 
+                      : 'bg-white/50 hover:bg-white/70'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Bar Information Section */}
@@ -118,7 +226,7 @@ const DrinksSection: React.FC<DrinksSectionProps> = ({ language }) => {
           </div>
         </div>
 
-        {/* Rest of the existing code remains the same */}
+        {/* Menu Section */}
         <div className="max-w-3xl mx-auto">
           {isOpen ? (
             <>
