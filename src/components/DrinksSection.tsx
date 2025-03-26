@@ -65,11 +65,6 @@ const carouselImages = [
     url: "https://images.unsplash.com/photo-1560512823-829485b8bf24?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
     title: "Smoky Elegance",
     description: "Aged whiskey with aromatic bitters"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1578664182354-e3878469a19a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
-    title: "Garden Fresh",
-    description: "Herb-infused gin cocktail"
   }
 ];
 
