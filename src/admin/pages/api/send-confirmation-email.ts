@@ -1,51 +1,25 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { Resend } from 'resend';
 
 // Initialize Resend with API key from environment variable
-const resend = new Resend('re_25zAScfZ_FMtMjPCtRATibd1dgWjwtx5n'); // Use a valid API key directly for testing
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+// Async function to send email
+async function sendEmail() {
   try {
-    const { reservation } = req.body;
-
-    if (!reservation || !reservation.email) {
-      return res.status(400).json({ error: 'Missing reservation data' });
-    }
-
     const response = await resend.emails.send({
-      from: 'Acme <onboarding@resend.dev>',
-
-      to: ['bluewhaleasian@gmail.com'],
-
-      subject: 'New Reservation Confirmation',
-
-      html: `
-        <h1>Reservation Confirmed!</h1>
-        <p>Dear ${reservation.name},</p>
-        <p>Your reservation at Blue Whale Restaurant has been confirmed:</p>
-        <ul>
-          <li>Date: ${new Date(reservation.date).toLocaleDateString()}</li>
-          <li>Time: ${reservation.time}</li>
-          <li>Number of Guests: ${reservation.persons}</li>
-          <li>Occasion: ${reservation.occasion || 'Not specified'}</li>
-          <li>Special Requests: ${reservation.specialRequests || 'None'}</li>
-
-        <p>We look forward to serving you!</p>
-        <p>Best regards,<br>Blue Whale Restaurant Team</p>
-      `
+      from: 'onboarding@resend.dev',
+      to: 'bluewhaleasian@gmail.com',
+      subject: 'Hello World',
+      html: '<p>Check admin page a New reservation has been Made</strong>!</p>'
     });
 
-    return res.status(200).json({ success: true, data: response });
+    console.log('Email sent successfully:', response);
+    return response;
   } catch (error) {
     console.error('Error sending email:', error);
-    return res.status(500).json({ error: 'Failed to send email' });
+    throw error;
   }
 }
+
+// Export the function or call it depending on your use case
+export default sendEmail;
