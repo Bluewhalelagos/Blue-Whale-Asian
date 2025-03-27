@@ -20,9 +20,10 @@ export default async function handler(
     }
 
     const response = await resend.emails.send({
-      from: 'adithyaj2910@gmail.com',
-      to: reservation.email,
-      subject: 'Reservation Confirmed - Blue Whale Restaurant',
+      from: 'onboarding@resend.dev',
+      to: 'bluewhaleasian@gmail.com',
+      subject: 'New Reservation Confirmation',
+
       html: `
         <h1>Reservation Confirmed!</h1>
         <p>Dear ${reservation.name},</p>
@@ -31,7 +32,9 @@ export default async function handler(
           <li>Date: ${new Date(reservation.date).toLocaleDateString()}</li>
           <li>Time: ${reservation.time}</li>
           <li>Number of Guests: ${reservation.persons}</li>
-        </ul>
+          <li>Occasion: ${reservation.occasion || 'Not specified'}</li>
+          <li>Special Requests: ${reservation.specialRequests || 'None'}</li>
+
         <p>We look forward to serving you!</p>
         <p>Best regards,<br>Blue Whale Restaurant Team</p>
       `

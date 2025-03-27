@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Martini, AlertTriangle, Wine, GlassWater as Cocktail, ChevronLeft, ChevronRight } from "lucide-react";
-
+import tequila from "../Tequila.jpg"
 interface DrinksSectionProps {
   language: 'en' | 'pt';
 }
@@ -57,15 +57,15 @@ const carouselImages = [
     description: "Our house special with a twist of citrus"
   },
   {
-    url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
-    title: "Tropical Paradise",
-    description: "Fresh fruits and premium spirits blend"
+    url: "https://i.postimg.cc/V6hGkctX/Gin-and-Tonic.jpg",
+    title: "Gin and Tonic",
+    description: "Crisp gin with bubbly tonic and a zesty citrus twist."
   },
-  {
-    url: "https://images.unsplash.com/photo-1560512823-829485b8bf24?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80",
-    title: "Smoky Elegance",
-    description: "Aged whiskey with aromatic bitters"
-  }
+    {
+    url: tequila,
+    title: "Tequila Sunrise",
+    description: "Vibrant tequila with citrus and a sunset glow."
+  },
 ];
 
 const DrinksSection: React.FC<DrinksSectionProps> = ({ language }) => {

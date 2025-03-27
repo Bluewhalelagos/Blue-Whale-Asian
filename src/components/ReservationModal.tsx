@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { X, Phone, Calendar, Clock, Users, Mail, User, MessageSquare, CheckCircle } from 'lucide-react';
+import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from 'lucide-react';
+
 import { db } from '../firebase/config';
 import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 
@@ -193,7 +194,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     
     // Generate slots every 15 minutes
     for (let hour = 0; hour < 24; hour++) {
-      for (let minute of ['00', '15', '30', '45']) {
+      for (const minute of ['00', '15', '30', '45']) {
+
         const currentTimeMinutes = hour * 60 + parseInt(minute);
         const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
         
@@ -244,31 +246,31 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
   // Send email notification function
   const sendEmailNotification = async () => {
     try {
-      const response = await fetch("https://api.resend.com/emails", {
+      const response = await fetch("/api/send-confirmation-email", {
         method: "POST",
         headers: {
-          "Authorization": "Bearer re_71xKp3qC_CWTHTrgNdqoymvnEwvBUMyLC",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "onboarding@resend.dev",
-          to: "bluewhaleasian@gmail.com",
-          subject: "New Reservation Made",
-          text: `New Reservation Details:
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
-Date: ${formData.date.toLocaleDateString()}
-Time: ${formData.time}
-Persons: ${formData.persons}
-Occasion: ${formData.occasion || 'Not specified'}
-Seating Preference: ${formData.preferredSeating}
-Special Requests: ${formData.specialRequests || 'None'}`,
+          reservation: {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            date: formData.date.toISOString(),
+            time: formData.time,
+            persons: formData.persons,
+            occasion: formData.occasion,
+            specialRequests: formData.specialRequests,
+          },
         }),
+
       });
+      const responseData = await response.json();
       if (!response.ok) {
+        console.error('Email sending failed:', responseData);
         throw new Error('Failed to send email notification');
       }
+
     } catch (error) {
       console.error('Error sending email notification:', error);
       // Don't throw the error to prevent blocking the reservation process
@@ -389,7 +391,8 @@ Special Requests: ${formData.specialRequests || 'None'}`,
       setIsSubmitting(true);
       try {
         const nextId = await getNextReservationId();
-        const docRef = await addDoc(collection(db, 'reservations'), {
+        await addDoc(collection(db, 'reservations'), {
+
           reservationId: nextId,
           ...formData,
           date: formData.date.toISOString(),
