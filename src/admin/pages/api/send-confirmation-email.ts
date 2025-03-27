@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { Resend } from 'resend';
 
 // Initialize Resend with API key from environment variable
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend('re_25zAScfZ_FMtMjPCtRATibd1dgWjwtx5n'); // Use a valid API key directly for testing
+
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,8 +21,10 @@ export default async function handler(
     }
 
     const response = await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: 'bluewhaleasian@gmail.com',
+      from: 'Acme <onboarding@resend.dev>',
+
+      to: ['bluewhaleasian@gmail.com'],
+
       subject: 'New Reservation Confirmation',
 
       html: `
