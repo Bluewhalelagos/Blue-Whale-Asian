@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { Clock, Facebook, Instagram, UtensilsCrossed, Mail, Phone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, Facebook, Instagram, UtensilsCrossed, Mail, Phone, Users, CalendarDays, Truck, TrendingUp, Eye, X, Store, ChefHat, Tag, Save } from 'lucide-react';
+import { db } from './firebase/config';
+import { doc, onSnapshot, collection, getDocs, query, orderBy, limit, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Import components
 import Navbar from './components/Navbar';
@@ -15,6 +18,29 @@ import ReservationModal from './components/ReservationModal';
 import logoImage from './BlueWhale-Final-logo1.png';
 import DrinksSection from './components/DrinksSection';
 
+interface RestaurantStatus {
+  isOpen: boolean;
+  lastUpdated: string;
+}
+
+interface TodaysSpecial {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  isActive: boolean;
+}
+
+interface Offer {
+  id: string;
+  title: string;
+  description: string;
+  discountPercentage: number;
+  validUntil: string;
+  isActive: boolean;
+}
+
 // Define translations for the footer
 const footerTranslations = {
   en: {
@@ -27,7 +53,9 @@ const footerTranslations = {
     followUs: "Follow Us",
     contactUs: "Contact Us",
     phone: "Phone",
-    email: "Email"
+    email: "Email",
+    specialOffers: "Special Offers!",
+    closeOffers: "Close"
   },
   pt: {
     experienceFusion: "Experimente a Fusão de Sabores de Toda a Ásia!",
@@ -39,20 +67,73 @@ const footerTranslations = {
     followUs: "Siga-nos",
     contactUs: "Contate-nos",
     phone: "Telefone",
-    email: "E-mail"
+    email: "E-mail",
+    specialOffers: "Ofertas Especiais!",
+    closeOffers: "Fechar"
   }
 };
 
 function App() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'pt'>('en');
+  const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
+    isOpen: true,
+    lastUpdated: new Date().toISOString()
+  });
+  const [todaysSpecial, setTodaysSpecial] = useState<TodaysSpecial | null>(null);
+  const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
+  const [showOfferPopup, setShowOfferPopup] = useState(false);
+
+  useEffect(() => {
+    // Listen to restaurant status changes
+    const statusRef = doc(db, 'settings', 'restaurantStatus');
+    const unsubscribe = onSnapshot(statusRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setRestaurantStatus(snapshot.data() as RestaurantStatus);
+      }
+    });
+
+    // Listen to today's special changes
+    const specialRef = doc(db, 'settings', 'todaysSpecial');
+    const specialUnsubscribe = onSnapshot(specialRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as TodaysSpecial;
+        if (data.isActive) {
+          setTodaysSpecial(data);
+        } else {
+          setTodaysSpecial(null);
+        }
+      }
+    });
+
+    // Listen to active offers
+    const offersRef = collection(db, 'offers');
+    const offersUnsubscribe = onSnapshot(offersRef, (snapshot) => {
+      const offers = snapshot.docs
+        .map(doc => ({ ...doc.data(), id: doc.id } as Offer))
+        .filter(offer => 
+          offer.isActive && 
+          new Date(offer.validUntil) > new Date()
+        );
+      setActiveOffers(offers);
+      setShowOfferPopup(offers.length > 0);
+    });
+
+    return () => {
+      unsubscribe();
+      specialUnsubscribe();
+      offersUnsubscribe();
+    };
+  }, []);
 
   const handleLanguageChange = (newLang: 'en' | 'pt') => {
     setLanguage(newLang);
   };
 
   const handleBookTable = () => {
-    setIsReservationModalOpen(true);
+    if (restaurantStatus.isOpen) {
+      setIsReservationModalOpen(true);
+    }
   };
 
   const footerText = footerTranslations[language];
@@ -63,20 +144,56 @@ function App() {
       <Navbar 
         onBookTable={handleBookTable} 
         language={language} 
-        onLanguageChange={handleLanguageChange} 
+        onLanguageChange={handleLanguageChange}
+        isReservationsOpen={restaurantStatus.isOpen}
       />
       
       <main className="flex-grow pt-16">
-        <Hero onBookTable={handleBookTable} language={language} />
+        <Hero 
+          onBookTable={handleBookTable} 
+          language={language}
+          isReservationsOpen={restaurantStatus.isOpen} 
+        />
         <About language={language} />
         <Gallery language={language} />
-        <MenuSection language={language} />
+        <MenuSection 
+          language={language} 
+          todaysSpecial={todaysSpecial}
+          activeOffers={activeOffers}
+        />
         <DrinksSection language={language} />
         <Reviews language={language} />
         <Careers language={language} />
         <Delivery language={language} />
         <Contact language={language} />
       </main>
+
+      {/* Offers Popup */}
+      {showOfferPopup && activeOffers.length > 0 && (
+        <div className="fixed bottom-4 right-4 max-w-sm bg-white rounded-lg shadow-xl border border-amber-400/20 p-4 z-50">
+          <button 
+            onClick={() => setShowOfferPopup(false)}
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+          >
+            <X size={20} />
+          </button>
+          <h3 className="text-lg font-semibold text-amber-600 mb-2">
+            {footerText.specialOffers}
+          </h3>
+          {activeOffers.map((offer, index) => (
+            <div 
+              key={offer.id}
+              className={`${index > 0 ? 'mt-2 pt-2 border-t border-gray-200' : ''}`}
+            >
+              <p className="font-medium text-gray-800">{offer.title}</p>
+              <p className="text-sm text-gray-600">{offer.description}</p>
+              <p className="text-amber-500 font-semibold mt-1">
+                {offer.discountPercentage}% OFF
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-black text-gray-200 py-12">
@@ -89,7 +206,6 @@ function App() {
               <h3 className="text-xl font-semibold text-amber-400 text-center md:text-centre">
                 {footerText.experienceFusion}
               </h3>
-              
             </div>
 
             {/* Column 2 - Opening Hours */}
@@ -103,20 +219,22 @@ function App() {
               <div className="mt-6">
                 <h4 className="text-lg font-semibold text-amber-400">{footerText.followUs}</h4>
                 <div className="flex justify-center md:justify-start space-x-4 mt-2">
-  <a href="https://www.facebook.com/your-facebook-page" target="_blank" rel="noopener noreferrer">
-    <Facebook size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
-  </a>
-  <a href="https://www.instagram.com/bluewhalelagos?igsh=MTdyaTJuMGp0dTVkYw==" target="_blank" rel="noopener noreferrer">
-    <Instagram size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
-  </a>
-  <UtensilsCrossed 
-    size={24} 
-    className="cursor-pointer hover:text-amber-400 transition-colors" 
-    onClick={handleBookTable} 
-  />
-</div>
-
-
+                  <a href="https://www.facebook.com/your-facebook-page" target="_blank" rel="noopener noreferrer">
+                    <Facebook size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
+                  </a>
+                  <a href="https://www.instagram.com/bluewhalelagos?igsh=MTdyaTJuMGp0dTVkYw==" target="_blank" rel="noopener noreferrer">
+                    <Instagram size={24} className="cursor-pointer hover:text-amber-400 transition-colors" />
+                  </a>
+                  <UtensilsCrossed 
+                    size={24} 
+                    className={`cursor-pointer transition-colors ${
+                      restaurantStatus.isOpen 
+                        ? 'hover:text-amber-400' 
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                    onClick={restaurantStatus.isOpen ? handleBookTable : undefined}
+                  />
+                </div>
               </div>
             </div>
 

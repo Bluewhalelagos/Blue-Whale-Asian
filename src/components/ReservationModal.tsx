@@ -241,6 +241,40 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     }
   }, [isOpen]);
 
+  // Send email notification function
+  const sendEmailNotification = async () => {
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer re_71xKp3qC_CWTHTrgNdqoymvnEwvBUMyLC",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "onboarding@resend.dev",
+          to: "bluewhaleasian@gmail.com",
+          subject: "New Reservation Made",
+          text: `New Reservation Details:
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+Date: ${formData.date.toLocaleDateString()}
+Time: ${formData.time}
+Persons: ${formData.persons}
+Occasion: ${formData.occasion || 'Not specified'}
+Seating Preference: ${formData.preferredSeating}
+Special Requests: ${formData.specialRequests || 'None'}`,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to send email notification');
+      }
+    } catch (error) {
+      console.error('Error sending email notification:', error);
+      // Don't throw the error to prevent blocking the reservation process
+    }
+  };
+
   // Helper function to check if a time is within restaurant hours, handling overnight hours
   const isTimeWithinRestaurantHours = (time: string) => {
     const opening = restaurantStatus?.openingTime || "17:00";
@@ -362,6 +396,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
           status: 'approved', // Auto-approve reservations for 6 or fewer people
           createdAt: new Date().toISOString()
         });
+        
+        // Send email notification
+        await sendEmailNotification();
         
         setReservationId(nextId);
         setShowConfirmation(true);

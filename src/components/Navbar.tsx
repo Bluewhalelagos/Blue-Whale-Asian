@@ -31,8 +31,8 @@ const translations = {
   open: { en: 'Open', pt: 'Aberto' },
   until: { en: 'Until', pt: 'Até' },
   opensAt: { en: 'Opens at', pt: 'Abre às' },
-  wereOpen: { en: 'We\'re Open', pt: 'Estamos Abertos' },
-  wereClosed: { en: 'We\'re Closed', pt: 'Estamos Fechados' }
+  wereOpen: { en: "We're Open", pt: 'Estamos Abertos' },
+  wereClosed: { en: "We're Closed", pt: 'Estamos Fechados' }
 };
 
 const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange }) => {
@@ -56,7 +56,6 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
     const newLang = language === 'en' ? 'pt' : 'en';
     onLanguageChange(newLang);
     
-    // Fetch dynamic translations for time-related texts if needed
     if (newLang === 'pt' && Object.keys(dynamicTranslations).length === 0) {
       try {
         const timeFormat = await translateText(`${restaurantStatus.openTime}`, 'pt');
@@ -70,7 +69,6 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
     }
   };
 
-  // Add scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -82,7 +80,6 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
     };
   }, []);
 
-  // Firebase restaurant status listener
   useEffect(() => {
     const statusRef = doc(db, 'settings', 'restaurantStatus');
     
@@ -99,8 +96,9 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
 
   const StatusIndicator = () => (
     <div className={`flex items-center px-3 py-1 rounded-full transition-all duration-300 ${
-      restaurantStatus.isOpen       ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
-      : 'bg-gradient-to-r from-red-500 to-rose-600 text-white'
+      restaurantStatus.isOpen 
+        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
+        : 'bg-gradient-to-r from-red-500 to-rose-600 text-white'
     }`}>
       <div className="flex items-center mr-2">
         {restaurantStatus.isOpen ? (
@@ -109,14 +107,10 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
           <XCircle className="h-4 w-4 mr-1" />
         )}
         <span className="font-medium text-sm">
-          {restaurantStatus.isOpen ? t('openNow') : t('closed')}
+          {restaurantStatus.isOpen ? t('Reservations are Open Now') : t('Reservations Closed')}
         </span>
       </div>
-      <div className="text-xs font-light opacity-90">
-        {restaurantStatus.isOpen 
-          ? `${t('until')} ${restaurantStatus.closeTime}` 
-          : `${t('opensAt')} ${restaurantStatus.openTime}`}
-      </div>
+      
     </div>
   );
 
@@ -128,20 +122,26 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
     }`}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-2">
+          {/* Logo and Status Section */}
+          <div className="flex items-center space-x-4">
             <img src={logoImage} alt="Blue Whale Asian Fusion Logo" className="w-40 h-auto" />
+            <div className="hidden md:block">
+              <StatusIndicator />
+            </div>
           </div>
 
-          {/* Status Indicator - Desktop */}
-          
           {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8">
             <a href="#" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('homeLink')}</a>
             <a href="#about" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('aboutLink')}</a>
             <a href="#menu" className="font-medium hover:text-amber-500 transition-colors duration-200">{t('menuLink')}</a>
             <button 
-              onClick={onBookTable}
-              className="font-medium flex items-center space-x-1 hover:text-amber-500 transition-colors duration-200"
+              onClick={() => restaurantStatus.isOpen && onBookTable()}
+              className={`font-medium flex items-center space-x-1 transition-colors duration-200 ${
+                restaurantStatus.isOpen 
+                  ? 'hover:text-amber-500' 
+                  : 'opacity-50 cursor-not-allowed'
+              }`}
             >
               <span>{t('bookTableLink')}</span>
               <UtensilsCrossed className="h-4 w-4" />
@@ -167,7 +167,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
             >PT</button>
           </div>
 
-          {/* Mobile Status & Menu Button */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
             <StatusIndicator />
             <button 
@@ -180,31 +180,34 @@ const Navbar: React.FC<NavbarProps> = ({ onBookTable, language, onLanguageChange
           </div>
         </div>
 
-        {/* Mobile Menu - with smooth transition */}
+        {/* Mobile Menu */}
         <div 
           className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
             isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <div className={`px-2 pt-2 pb-3 space-y-1 ${scrolled ? 'bg-black text-white' : 'bg-white text-black'}`}>
-            {/* Full status display in mobile menu */}
-            
-            
-            <a href="#" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('homeLink')}</a>
-            <a href="#about" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('aboutLink')}</a>
-            <a href="#menu" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('menuLink')}</a>
+            <a href="#" className="block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200">{t('homeLink')}</a>
+            <a href="#about" className="block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200">{t('aboutLink')}</a>
+            <a href="#menu" className="block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200">{t('menuLink')}</a>
             <button 
               onClick={() => {
-                onBookTable();
-                setIsOpen(false);
+                if (restaurantStatus.isOpen) {
+                  onBookTable();
+                  setIsOpen(false);
+                }
               }}
-              className={`flex items-center w-full text-left px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}
+              className={`flex items-center w-full text-left px-3 py-2 font-medium rounded transition-colors duration-200 ${
+                restaurantStatus.isOpen 
+                  ? 'hover:bg-amber-200 hover:text-black' 
+                  : 'opacity-50 cursor-not-allowed'
+              }`}
             >
               <span>{t('bookTableLink')}</span>
               <UtensilsCrossed className="h-4 w-4 ml-1" />
             </button>
-            <a href="#delivery" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('deliveryLink')}</a>
-            <a href="#careers" className={`block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200`}>{t('careersLink')}</a>
+            <a href="#delivery" className="block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200">{t('deliveryLink')}</a>
+            <a href="#careers" className="block px-3 py-2 font-medium hover:bg-amber-200 hover:text-black rounded transition-colors duration-200">{t('careersLink')}</a>
             
             {/* Language toggle in mobile menu */}
             <div className="flex space-x-4 px-3 py-2">
