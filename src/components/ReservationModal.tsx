@@ -246,7 +246,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
   // Send email notification function
   const sendEmailNotification = async () => {
     try {
-      const response = await fetch("/api/send-confirmation-email", {
+      const response = await fetch("https://www.bluewhalelagos.com/api/send-confirmation-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
