@@ -5,7 +5,7 @@ import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from 'lucid
 
 import { db } from '../firebase/config';
 import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
-
+import { Resend } from 'resend';
 interface RestaurantStatus {
   isOpen: boolean;
   closedDays: string[]; // Array of days like ['Sunday', 'Monday']
@@ -244,33 +244,35 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
   }, [isOpen]);
 
   // Send email notification function
-  const sendEmailNotification = async () => {
+const sendEmailNotification = async (reservationDetails: {
+  name: string;
+  phone: string;
+  email: string;
+  date: string;
+  time: string;
+  persons: string;
+  specialRequests: string;
+}) => {
+
+
     try {
-      const response = await fetch("https://www.bluewhalelagos.com/api/send-confirmation-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          reservation: {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            date: formData.date.toISOString(),
-            time: formData.time,
-            persons: formData.persons,
-            occasion: formData.occasion,
-            specialRequests: formData.specialRequests,
-          },
-        }),
-
+      const resend = new Resend('re_ebEKArj6_N7JYv9csAeH3bEdWkEkUGSKh');
+  
+      const response = await resend.emails.send({
+        from: 'BLUE WHALE LAGOS<onboarding@resend.dev>',
+        to: ['bluewhaleasian@gmail.com'],
+        subject: 'New Restaurant Reservation',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2>New Reservation Alert</h2>
+                    
+            <p>Please check the admin dashboard for full details.</p>
+          </div>
+        `
       });
-      const responseData = await response.json();
-      if (!response.ok) {
-        console.error('Email sending failed:', responseData);
-        throw new Error('Failed to send email notification');
-      }
-
+  
+      console.log('Email sent successfully:', response);
+      return response;
     } catch (error) {
       console.error('Error sending email notification:', error);
       // Don't throw the error to prevent blocking the reservation process
@@ -400,8 +402,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
           createdAt: new Date().toISOString()
         });
         
-        // Send email notification
-        await sendEmailNotification();
+        // Send email notification with reservation details
+        await sendEmailNotification({
+          ...formData,
+          date: formData.date.toISOString(),
+        });
+
+
         
         setReservationId(nextId);
         setShowConfirmation(true);
@@ -668,10 +675,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
-                    <option value="">{text.occasion}</option>
-                    <option value="birthday">{text.occasions.birthday}</option>
-                    <option value="anniversary">{text.occasions.anniversary}</option>
-                    <option value="business">{text.occasions.business}</option>
                     <option value="date">{text.occasions.date}</option>
                     <option value="other">{text.occasions.other}</option>
                   </select>
