@@ -210,33 +210,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({
         )}
 
         {/* Active Offers Section */}
-        {activeOffers.length > 0 && (
-          <div className="max-w-3xl mx-auto mb-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeOffers.map((offer) => (
-                <div 
-                  key={offer.id}
-                  className="bg-amber-400/10 backdrop-blur-sm border border-amber-400/20 rounded-lg p-6"
-                >
-                  <h4 className="text-xl font-semibold text-amber-400 mb-2">
-                    {offer.title}
-                  </h4>
-                  <p className="text-gray-300 mb-3">
-                    {offer.description}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-white">
-                      {offer.discountPercentage}% OFF
-                    </span>
-                    <span className="text-sm text-gray-400">
-                      {text.validUntil} {new Date(offer.validUntil).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+       
 
         {/* Rest of the component remains the same */}
         <div className="max-w-3xl mx-auto">

@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from 'lucide-react';
-
 import { db } from '../firebase/config';
 import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
-import { Resend } from 'resend';
+import { sendReservationEmail } from '../firebase/functions';
+
 interface RestaurantStatus {
   isOpen: boolean;
-  closedDays: string[]; // Array of days like ['Sunday', 'Monday']
-  openingTime: string; // "09:00"
-  closingTime: string; // "22:00"
+  closedDays: string[];
+  openingTime: string;
+  closingTime: string;
   specialClosures: {
-    date: string; // ISO string
+    date: string;
     reason?: string;
   }[];
 }
@@ -20,10 +20,9 @@ interface RestaurantStatus {
 interface ReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  language: 'en' | 'pt'; // Add language prop
+  language: 'en' | 'pt';
 }
 
-// Define translations for the ReservationModal component
 const translations = {
   en: {
     title: "TABLE RESERVATION",
@@ -35,9 +34,6 @@ const translations = {
     specialRequests: "Special Requests",
     occasion: "Select an occasion (optional)",
     occasions: {
-      birthday: "Birthday",
-      anniversary: "Anniversary",
-      business: "Business Meal",
       date: "Date Night",
       other: "Other"
     },
@@ -92,9 +88,6 @@ const translations = {
     specialRequests: "Pedidos Especiais",
     occasion: "Selecione uma ocasião (opcional)",
     occasions: {
-      birthday: "Aniversário",
-      anniversary: "Aniversário de Casamento",
-      business: "Refeição de Negócios",
       date: "Jantar Romântico",
       other: "Outro"
     },
@@ -142,69 +135,75 @@ const translations = {
 };
 
 const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, language }) => {
-  // Get translations based on selected language
-  const text = translations[language];
-  
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     date: new Date(),
-    time: '17:00', // Updated default to match the 5 PM opening time
+    time: '17:00',
     persons: '2',
     specialRequests: '',
     occasion: '',
     preferredSeating: 'no preference'
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLargeGroupMessage, setShowLargeGroupMessage] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [reservationId, setReservationId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
-    closedDays: ['Wednesday'], // Updated to match the provided information
-    openingTime: "17:00",      // Updated to match the provided information
-    closingTime: "22:00",      // Updated to match the provided information
+    closedDays: ['Wednesday'],
+    openingTime: "17:00",
+    closingTime: "22:00",
     specialClosures: []
   });
-  const [reservationId, setReservationId] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Improved time slots generation function that handles closing times past midnight
+
+  const text = translations[language];
+
+  useEffect(() => {
+    const fetchRestaurantStatus = async () => {
+      setIsLoading(true);
+      try {
+        const statusDoc = await getDoc(doc(db, 'settings', 'restaurantStatus'));
+        if (statusDoc.exists()) {
+          setRestaurantStatus(statusDoc.data() as RestaurantStatus);
+        }
+      } catch (error) {
+        console.error('Error fetching restaurant status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchRestaurantStatus();
+    }
+  }, [isOpen]);
+
   const generateTimeSlots = () => {
     const slots = [];
-    // Default times in case restaurant status isn't loaded yet
     const opening = restaurantStatus?.openingTime || "17:00";
     const closing = restaurantStatus?.closingTime || "22:00";
     
-    // Parse opening and closing hours
     const [openHour, openMinute] = opening.split(':').map(num => parseInt(num));
     const [closeHour, closeMinute] = closing.split(':').map(num => parseInt(num));
     
-    // Convert to minutes for easier comparison
     const openingTimeMinutes = openHour * 60 + openMinute;
     let closingTimeMinutes = closeHour * 60 + closeMinute;
     
-    // Handle cases where closing time is on the next day (after midnight)
-    // If closing time is earlier than opening time, assume it's on the next day
     if (closingTimeMinutes < openingTimeMinutes) {
-      closingTimeMinutes += 24 * 60; // Add 24 hours
+      closingTimeMinutes += 24 * 60;
     }
     
-    // Generate slots every 15 minutes
     for (let hour = 0; hour < 24; hour++) {
       for (const minute of ['00', '15', '30', '45']) {
-
         const currentTimeMinutes = hour * 60 + parseInt(minute);
         const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
         
-        // Check if time is within restaurant hours
         if (currentTimeMinutes >= openingTimeMinutes && currentTimeMinutes <= closingTimeMinutes) {
-          slots.push(timeValue);
-        }
-        // For next day slots (after midnight)
-        else if (closingTimeMinutes > 24 * 60 && currentTimeMinutes + 24 * 60 <= closingTimeMinutes) {
           slots.push(timeValue);
         }
       }
@@ -212,102 +211,22 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     
     return slots;
   };
-  
+
   const timeSlots = generateTimeSlots();
-  
-  useEffect(() => {
-    // Fetch restaurant status when modal opens
-    const fetchRestaurantStatus = async () => {
-      setIsLoading(true);
-      try {
-        const statusDoc = await getDoc(doc(db, 'settings', 'restaurantStatus'));
-        if (statusDoc.exists()) {
-          setRestaurantStatus(statusDoc.data() as RestaurantStatus);
-          
-          // Set default time to opening time if current time isn't set
-          const statusData = statusDoc.data() as RestaurantStatus;
-          if (statusData.openingTime && (!formData.time || formData.time === '17:00')) {
-            setFormData(prev => ({...prev, time: statusData.openingTime}));
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching restaurant status:', error);
-        // Keep the default values in case of error
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    if (isOpen) {
-      fetchRestaurantStatus();
-    }
-  }, [isOpen]);
 
-  // Send email notification function
-const sendEmailNotification = async (reservationDetails: {
-  name: string;
-  phone: string;
-  email: string;
-  date: string;
-  time: string;
-  persons: string;
-  specialRequests: string;
-}) => {
-
-
-    try {
-      const resend = new Resend('re_ebEKArj6_N7JYv9csAeH3bEdWkEkUGSKh');
-  
-      const response = await resend.emails.send({
-        from: 'BLUE WHALE LAGOS<onboarding@resend.dev>',
-        to: ['bluewhaleasian@gmail.com'],
-        subject: 'New Restaurant Reservation',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2>New Reservation Alert</h2>
-                    
-            <p>Please check the admin dashboard for full details.</p>
-          </div>
-        `
-      });
-  
-      console.log('Email sent successfully:', response);
-      return response;
-    } catch (error) {
-      console.error('Error sending email notification:', error);
-      // Don't throw the error to prevent blocking the reservation process
-    }
-  };
-
-  // Helper function to check if a time is within restaurant hours, handling overnight hours
-  const isTimeWithinRestaurantHours = (time: string) => {
-    const opening = restaurantStatus?.openingTime || "17:00";
-    const closing = restaurantStatus?.closingTime || "22:00";
+  const getNextReservationId = async () => {
+    const reservationsRef = collection(db, 'reservations');
+    const q = query(reservationsRef, orderBy('reservationId', 'desc'));
+    const querySnapshot = await getDocs(q);
     
-    // Parse opening and closing hours
-    const [openHour, openMinute] = opening.split(':').map(num => parseInt(num));
-    const [closeHour, closeMinute] = closing.split(':').map(num => parseInt(num));
-    
-    // Parse selected time
-    const [selectedHour, selectedMinute] = time.split(':').map(num => parseInt(num));
-    
-    // Convert all to minutes for easier comparison
-    const openingTimeMinutes = openHour * 60 + openMinute;
-    let closingTimeMinutes = closeHour * 60 + closeMinute;
-    const selectedTimeMinutes = selectedHour * 60 + selectedMinute;
-    
-    // If closing time is earlier than opening time, it's assumed to be on the next day
-    if (closingTimeMinutes < openingTimeMinutes) {
-      closingTimeMinutes += 24 * 60; // Add 24 hours
-      
-      // For times after midnight, we need to adjust the comparison
-      if (selectedTimeMinutes < openingTimeMinutes) {
-        // Early morning hours, check if they're before closing time
-        return selectedTimeMinutes + 24 * 60 <= closingTimeMinutes;
-      }
+    if (querySnapshot.empty) {
+      return 'reservation1';
     }
     
-    return selectedTimeMinutes >= openingTimeMinutes && selectedTimeMinutes <= closingTimeMinutes;
+    const lastDoc = querySnapshot.docs[0];
+    const lastId = lastDoc.data().reservationId;
+    const lastNumber = parseInt(lastId.replace('reservation', ''));
+    return `reservation${lastNumber + 1}`;
   };
 
   const validateForm = () => {
@@ -329,61 +248,24 @@ const sendEmailNotification = async (reservationDetails: {
       newErrors.email = text.errors.invalidEmail;
     }
     
-    // Check if the restaurant is closed on the selected day
     const dayOfWeek = new Date(formData.date).toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT', { weekday: 'long' });
     if (restaurantStatus.closedDays?.includes(dayOfWeek)) {
       newErrors.date = `${text.errors.closed} ${dayOfWeek}s`;
-    }
-    
-    // Check if the selected time is outside operating hours
-    if (!isTimeWithinRestaurantHours(formData.time)) {
-      newErrors.time = `${text.errors.hours} ${restaurantStatus.openingTime} to ${restaurantStatus.closingTime}`;
-    }
-    
-    // Check for special closures
-    const selectedDateStr = formData.date.toISOString().split('T')[0];
-    const isSpecialClosure = restaurantStatus.specialClosures?.some(
-      closure => closure.date.split('T')[0] === selectedDateStr
-    );
-    
-    if (isSpecialClosure) {
-      const closure = restaurantStatus.specialClosures?.find(
-        c => c.date.split('T')[0] === selectedDateStr
-      );
-      newErrors.date = closure?.reason || 'Restaurant is closed on this date';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const getNextReservationId = async () => {
-    const reservationsRef = collection(db, 'reservations');
-    const q = query(reservationsRef, orderBy('reservationId', 'desc'));
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      return 'reservation1';
-    }
-    
-    const lastDoc = querySnapshot.docs[0];
-    const lastId = lastDoc.data().reservationId || lastDoc.data().id;
-    const lastNumber = parseInt(lastId.replace('reservation', ''));
-    return `reservation${lastNumber + 1}`;
-  };
-
   const handlePersonsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setFormData({...formData, persons: value});
-    
-    // Show large group message if more than 6 persons
     setShowLargeGroupMessage(parseInt(value) > 6);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // If group size > 6, don't proceed with submission
     if (parseInt(formData.persons) > 6) {
       setShowLargeGroupMessage(true);
       return;
@@ -393,23 +275,30 @@ const sendEmailNotification = async (reservationDetails: {
       setIsSubmitting(true);
       try {
         const nextId = await getNextReservationId();
-        await addDoc(collection(db, 'reservations'), {
-
+        const reservationData = {
           reservationId: nextId,
           ...formData,
           date: formData.date.toISOString(),
-          status: 'approved', // Auto-approve reservations for 6 or fewer people
+          status: 'approved',
           createdAt: new Date().toISOString()
-        });
-        
-        // Send email notification with reservation details
-        await sendEmailNotification({
-          ...formData,
+        };
+
+        // Add reservation to Firestore
+        await addDoc(collection(db, 'reservations'), reservationData);
+
+        // Send notification through Firestore
+        await sendReservationEmail({
+          id: nextId,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
           date: formData.date.toISOString(),
+          time: formData.time,
+          persons: formData.persons,
+          occasion: formData.occasion,
+          specialRequests: formData.specialRequests
         });
 
-
-        
         setReservationId(nextId);
         setShowConfirmation(true);
       } catch (error) {
@@ -421,15 +310,12 @@ const sendEmailNotification = async (reservationDetails: {
     }
   };
 
-  // Updated isDateDisabled function to always block Wednesdays regardless of the closedDays array
   const isDateDisabled = (date: Date) => {
-    // Always block Wednesdays
     const dayOfWeek = date.getDay();
-    if (dayOfWeek === 3) { // Wednesday is day 3 (0-indexed, Sunday is 0)
+    if (dayOfWeek === 3) {
       return true;
     }
     
-    // Check if day is in other closed days from the restaurant status
     if (restaurantStatus.closedDays) {
       const dayName = date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT', { weekday: 'long' });
       if (restaurantStatus.closedDays.includes(dayName)) {
@@ -437,7 +323,6 @@ const sendEmailNotification = async (reservationDetails: {
       }
     }
     
-    // Check if date is in special closures
     const dateStr = date.toISOString().split('T')[0];
     return restaurantStatus.specialClosures?.some(
       closure => closure.date.split('T')[0] === dateStr
@@ -449,9 +334,7 @@ const sendEmailNotification = async (reservationDetails: {
       <CheckCircle className="h-16 w-16 text-amber-500 mx-auto" />
       <h3 className="text-2xl font-bold text-amber-400">{text.confirmationTitle}</h3>
       <div className="bg-black/60 p-6 rounded-lg border border-amber-400/20">
-        <p className="text-gray-200 mb-4">
-          {text.confirmationMessage}
-        </p>
+        <p className="text-gray-200 mb-4">{text.confirmationMessage}</p>
         <div className="space-y-2 text-left">
           <div className="flex justify-between">
             <span className="font-medium text-amber-300">{text.reservationId}</span>
@@ -459,7 +342,9 @@ const sendEmailNotification = async (reservationDetails: {
           </div>
           <div className="flex justify-between">
             <span className="font-medium text-amber-300">{text.date}</span>
-            <span className="text-white">{formData.date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT')}</span>
+            <span className="text-white">
+              {formData.date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT')}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="font-medium text-amber-300">{text.time}</span>
@@ -499,9 +384,7 @@ const sendEmailNotification = async (reservationDetails: {
             <div className="bg-black/60 p-6 rounded-lg border border-amber-400/20">
               <Users className="h-12 w-12 text-amber-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-amber-400 mb-2">{text.largeGroupHeading}</h3>
-              <p className="text-gray-300 mb-4">
-                {text.largeGroupMessage}
-              </p>
+              <p className="text-gray-300 mb-4">{text.largeGroupMessage}</p>
               <div className="flex items-center justify-center text-amber-400 font-bold text-xl">
                 <Phone className="h-6 w-6 mr-2" />
                 <a href="tel:+351920221805" className="hover:underline">{text.callNow}</a>
@@ -527,30 +410,6 @@ const sendEmailNotification = async (reservationDetails: {
                 <X className="w-6 h-6" />
               </button>
             </div>
-
-            {restaurantStatus.closedDays && restaurantStatus.closedDays.includes('Wednesday') && (
-              <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
-                <div className="flex">
-                  <div className="ml-3">
-                    <p className="text-amber-400 font-medium">{text.closedDay}</p>
-                    <p className="text-sm text-amber-300">{text.closedDayMessage}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!restaurantStatus.isOpen && (
-              <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
-                <div className="flex">
-                  <div className="ml-3">
-                    <p className="text-amber-400 font-medium">{text.restaurantClosed}</p>
-                    <p className="text-sm text-amber-300">
-                      {text.restaurantClosedMessage}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-4">
@@ -630,15 +489,9 @@ const sendEmailNotification = async (reservationDetails: {
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
-                    {timeSlots.length > 0 ? (
-                      timeSlots.map(time => (
-                        <option key={time} value={time}>
-                          {time}
-                        </option>
-                      ))
-                    ) : (
-                      <option value={formData.time}>{formData.time}</option>
-                    )}
+                    {timeSlots.map(time => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
                   </select>
                   {errors.time && <p className="text-amber-500 text-sm mt-1">{errors.time}</p>}
                 </div>
@@ -675,6 +528,7 @@ const sendEmailNotification = async (reservationDetails: {
                     className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
+                    <option value="">{text.occasion}</option>
                     <option value="date">{text.occasions.date}</option>
                     <option value="other">{text.occasions.other}</option>
                   </select>
@@ -685,40 +539,41 @@ const sendEmailNotification = async (reservationDetails: {
                     value={formData.preferredSeating}
                     onChange={(e) => setFormData({...formData, preferredSeating: e.target.value})}
                     className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
-                    disabled={isSubmitting}>
-                      <option value="no preference">{text.seating.noPreference}</option>
-                      <option value="indoor">{text.seating.indoor}</option>
-                      <option value="outdoor">{text.seating.outdoor}</option>
-                      <option value="window">{text.seating.window}</option>
-                      <option value="private">{text.seating.private}</option>
-                    </select>
-                    </div>
-                    
-                    <div>
-                      <textarea
-                        placeholder={text.requests}
-                        value={formData.specialRequests}
-                        onChange={(e) => setFormData({...formData, specialRequests: e.target.value})}
-                        className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
-                        rows={3}
-                        disabled={isSubmitting}
-                      ></textarea>
-                    </div>
-                    </div>
-                    
-                    <button
-                      type="submit"
-                      className="w-full bg-amber-500 text-black font-bold py-3 px-6 rounded-md hover:bg-amber-400 transition-colors disabled:bg-amber-600 disabled:opacity-70"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? text.submitting : text.bookButton}
-                    </button>
-                    </form>
+                    disabled={isSubmitting}
+                  >
+                    <option value="no preference">{text.seating.noPreference}</option>
+                    <option value="indoor">{text.seating.indoor}</option>
+                    <option value="outdoor">{text.seating.outdoor}</option>
+                    <option value="window">{text.seating.window}</option>
+                    <option value="private">{text.seating.private}</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <textarea
+                    placeholder={text.requests}
+                    value={formData.specialRequests}
+                    onChange={(e) => setFormData({...formData, specialRequests: e.target.value})}
+                    className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
+                    rows={3}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-amber-500 text-black font-bold py-3 px-6 rounded-md hover:bg-amber-400 transition-colors disabled:bg-amber-600 disabled:opacity-70"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? text.submitting : text.bookButton}
+              </button>
+            </form>
           </>
         )}
       </div>
     </div>
   );
-}
+};
 
 export default ReservationModal;
