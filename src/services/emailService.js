@@ -25,7 +25,7 @@ export const sendEmail = async () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-key": process.env.BREVO_API_KEY
+        "api-key": "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"
       },
       body: JSON.stringify({
         sender: { name: "Blue Whale Reservations", email: "bluewhaleasian@gmail.com" },
