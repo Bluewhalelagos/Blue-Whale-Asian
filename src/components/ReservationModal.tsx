@@ -7,7 +7,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from "lucide-react"
 import { db } from "../firebase/config"
 import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from "firebase/firestore"
-import { sendEmail } from "../pages/api/send-email.js"
+import { sendEmail } from "../utils/sendEmail.js"
 
 interface RestaurantStatus {
   isOpen: boolean
@@ -285,26 +285,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
         // Add reservation to Firestore
         await addDoc(collection(db, "reservations"), reservationData)
 
-        // Send email notification
-        const sendEmailNotification = async () => {
-          try {
-            const response = await fetch("/api/send-email", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" }
-            });
-        
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error);
-        
-            console.log("Email notification sent successfully");
-          } catch (error) {
-            console.error("Failed to send email notification:", error);
-          }
-        };
-        
-        // Call this function when needed:
-        await sendEmailNotification();
-        
+        // Send email notification using Brevo API
+        try {
+          await sendEmail(reservationData)
+          console.log("Email notification sent successfully")
+        } catch (emailError) {
+          console.error("Failed to send email notification:", emailError)
+        }
 
         setReservationId(nextId)
         setShowConfirmation(true)
@@ -603,3 +590,4 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
 }
 
 export default ReservationModal
+
