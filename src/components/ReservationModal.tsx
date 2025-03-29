@@ -7,7 +7,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from "lucide-react"
 import { db } from "../firebase/config"
 import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from "firebase/firestore"
-import { sendEmail } from '../services/emailService.js'
+import { sendEmail } from "../pages/api/send-email.js"
 
 interface RestaurantStatus {
   isOpen: boolean
@@ -286,13 +286,25 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
         await addDoc(collection(db, "reservations"), reservationData)
 
         // Send email notification
-        try {
-          await sendEmail()
-          console.log("Email notification sent successfully")
-        } catch (emailError) {
-          console.error("Failed to send email notification:", emailError)
-          // Continue with the reservation process even if email fails
-        }
+        const sendEmailNotification = async () => {
+          try {
+            const response = await fetch("/api/send-email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" }
+            });
+        
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error);
+        
+            console.log("Email notification sent successfully");
+          } catch (error) {
+            console.error("Failed to send email notification:", error);
+          }
+        };
+        
+        // Call this function when needed:
+        await sendEmailNotification();
+        
 
         setReservationId(nextId)
         setShowConfirmation(true)
