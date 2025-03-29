@@ -54,7 +54,7 @@ export const sendEmail = async (reservationData) => {
           },
           to: [
             {
-              email: "bluewhalelagos@gmail.com",
+              email: "Kartikpoojary8@gmail.com",
               name: "Blue Whale Admin",
             },
           ],
