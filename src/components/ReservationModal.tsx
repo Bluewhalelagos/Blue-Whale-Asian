@@ -1,29 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
-import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from 'lucide-react';
-import { db } from '../firebase/config';
-import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
-import { sendEmail } from '../services/emailService'; // Adjust the path accordingly
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from "lucide-react"
+import { db } from "../firebase/config"
+import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from "firebase/firestore"
+import { sendEmail } from '../services/emailService.js'
 
 interface RestaurantStatus {
-  isOpen: boolean;
-  closedDays: string[];
-  openingTime: string;
-  closingTime: string;
+  isOpen: boolean
+  closedDays: string[]
+  openingTime: string
+  closingTime: string
   specialClosures: {
-    date: string;
-    reason?: string;
-  }[];
+    date: string
+    reason?: string
+  }[]
 }
 
 interface ReservationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  language: 'en' | 'pt';
+  isOpen: boolean
+  onClose: () => void
+  language: "en" | "pt"
 }
 
-const translations = {
+const translations: Record<string, any> = {
   en: {
     title: "TABLE RESERVATION",
     contactInfo: "Contact Information",
@@ -38,7 +41,7 @@ const translations = {
       anniversary: "Anniversary",
       business: "Business Meal",
       date: "Date Night",
-      other: "Other"
+      other: "Other",
     },
     seatingPreference: "Seating Preference",
     seating: {
@@ -46,7 +49,7 @@ const translations = {
       indoor: "Indoor",
       outdoor: "Outdoor",
       window: "Window",
-      private: "Private (if available)"
+      private: "Private (if available)",
     },
     requests: "Any special requests or dietary requirements?",
     bookButton: "Book a Table",
@@ -54,10 +57,12 @@ const translations = {
     closedDay: "WEDNESDAY CLOSED!",
     closedDayMessage: "Please select another day for your reservation.",
     restaurantClosed: "NOTICE",
-    restaurantClosedMessage: "The restaurant is currently closed for regular service. You can still make reservations for future dates.",
+    restaurantClosedMessage:
+      "The restaurant is currently closed for regular service. You can still make reservations for future dates.",
     largeGroupTitle: "GROUP RESERVATION",
     largeGroupHeading: "Large Group Booking",
-    largeGroupMessage: "For groups of 7 or more, we require a phone confirmation to ensure we can accommodate your party.",
+    largeGroupMessage:
+      "For groups of 7 or more, we require a phone confirmation to ensure we can accommodate your party.",
     callNow: "Call +351 920 221 805",
     goBack: "Go back to reservation form",
     largeGroupWarning: "Groups of 7+ require phone confirmation",
@@ -78,8 +83,8 @@ const translations = {
       emailRequired: "Email is required",
       invalidEmail: "Invalid email address",
       closed: "We are closed on",
-      hours: "Restaurant hours are"
-    }
+      hours: "Restaurant hours are",
+    },
   },
   pt: {
     title: "RESERVA DE MESA",
@@ -95,7 +100,7 @@ const translations = {
       anniversary: "Aniversário de Casamento",
       business: "Refeição de Negócios",
       date: "Jantar Romântico",
-      other: "Outro"
+      other: "Outro",
     },
     seatingPreference: "Preferência de Assento",
     seating: {
@@ -103,7 +108,7 @@ const translations = {
       indoor: "Interior",
       outdoor: "Exterior",
       window: "Janela",
-      private: "Privado (se disponível)"
+      private: "Privado (se disponível)",
     },
     requests: "Algum pedido especial ou requisito dietético?",
     bookButton: "Reservar uma Mesa",
@@ -111,10 +116,12 @@ const translations = {
     closedDay: "QUARTAS-FEIRAS FECHADO!",
     closedDayMessage: "Por favor, selecione outro dia para sua reserva.",
     restaurantClosed: "AVISO",
-    restaurantClosedMessage: "O restaurante está atualmente fechado para serviço regular. Você ainda pode fazer reservas para datas futuras.",
+    restaurantClosedMessage:
+      "O restaurante está atualmente fechado para serviço regular. Você ainda pode fazer reservas para datas futuras.",
     largeGroupTitle: "RESERVA DE GRUPO",
     largeGroupHeading: "Reserva para Grupo Grande",
-    largeGroupMessage: "Para grupos de 7 ou mais, necessitamos de uma confirmação por telefone para garantir que podemos acomodar o seu grupo.",
+    largeGroupMessage:
+      "Para grupos de 7 ou mais, necessitamos de uma confirmação por telefone para garantir que podemos acomodar o seu grupo.",
     callNow: "Ligar para +351 920 221 805",
     goBack: "Voltar ao formulário de reserva",
     largeGroupWarning: "Grupos de 7+ requerem confirmação por telefone",
@@ -135,175 +142,187 @@ const translations = {
       emailRequired: "Email é obrigatório",
       invalidEmail: "Endereço de email inválido",
       closed: "Estamos fechados às",
-      hours: "Horário do restaurante é das"
-    }
-  }
-};
+      hours: "Horário do restaurante é das",
+    },
+  },
+}
 
 const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, language }) => {
-  const text = translations[language];
+  const text = translations[language]
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
+    name: "",
+    phone: "",
+    email: "",
     date: new Date(),
-    time: '17:00',
-    persons: '2',
-    specialRequests: '',
-    occasion: '',
-    preferredSeating: 'no preference'
-  });
+    time: "17:00",
+    persons: "2",
+    specialRequests: "",
+    occasion: "",
+    preferredSeating: "no preference",
+  })
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showLargeGroupMessage, setShowLargeGroupMessage] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [reservationId, setReservationId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showLargeGroupMessage, setShowLargeGroupMessage] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [reservationId, setReservationId] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(true)
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
-    closedDays: ['Wednesday'],
+    closedDays: ["Wednesday"],
     openingTime: "17:00",
     closingTime: "22:00",
-    specialClosures: []
-  });
+    specialClosures: [],
+  })
 
   const generateTimeSlots = () => {
-    const slots = [];
-    const opening = restaurantStatus?.openingTime || "17:00";
-    const closing = restaurantStatus?.closingTime || "22:00";
-    
-    const [openHour, openMinute] = opening.split(':').map(num => parseInt(num));
-    const [closeHour, closeMinute] = closing.split(':').map(num => parseInt(num));
-    
-    const openingTimeMinutes = openHour * 60 + openMinute;
-    let closingTimeMinutes = closeHour * 60 + closeMinute;
-    
+    const slots = []
+    const opening = restaurantStatus?.openingTime || "17:00"
+    const closing = restaurantStatus?.closingTime || "22:00"
+
+    const [openHour, openMinute] = opening.split(":").map((num) => Number.parseInt(num))
+    const [closeHour, closeMinute] = closing.split(":").map((num) => Number.parseInt(num))
+
+    const openingTimeMinutes = openHour * 60 + openMinute
+    let closingTimeMinutes = closeHour * 60 + closeMinute
+
     if (closingTimeMinutes < openingTimeMinutes) {
-      closingTimeMinutes += 24 * 60;
+      closingTimeMinutes += 24 * 60
     }
-    
+
     for (let hour = 0; hour < 24; hour++) {
-      for (const minute of ['00', '15', '30', '45']) {
-        const currentTimeMinutes = hour * 60 + parseInt(minute);
-        const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
-        
+      for (const minute of ["00", "15", "30", "45"]) {
+        const currentTimeMinutes = hour * 60 + Number.parseInt(minute)
+        const timeValue = `${hour.toString().padStart(2, "0")}:${minute}`
+
         if (currentTimeMinutes >= openingTimeMinutes && currentTimeMinutes <= closingTimeMinutes) {
-          slots.push(timeValue);
+          slots.push(timeValue)
         }
       }
     }
-    
-    return slots;
-  };
 
-  const timeSlots = generateTimeSlots();
+    return slots
+  }
+
+  const timeSlots = generateTimeSlots()
 
   useEffect(() => {
     const fetchRestaurantStatus = async () => {
-      setIsLoading(true);
+      setIsLoading(true)
       try {
-        const statusDoc = await getDoc(doc(db, 'settings', 'restaurantStatus'));
+        const statusDoc = await getDoc(doc(db, "settings", "restaurantStatus"))
         if (statusDoc.exists()) {
-          setRestaurantStatus(statusDoc.data() as RestaurantStatus);
+          setRestaurantStatus(statusDoc.data() as RestaurantStatus)
         }
       } catch (error) {
-        console.error('Error fetching restaurant status:', error);
+        console.error("Error fetching restaurant status:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
     if (isOpen) {
-      fetchRestaurantStatus();
+      fetchRestaurantStatus()
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
+    const newErrors: Record<string, string> = {}
+
     if (!formData.name.trim()) {
-      newErrors.name = text.errors.nameRequired;
-    }
-    
-    if (!formData.phone.trim()) {
-      newErrors.phone = text.errors.phoneRequired;
-    } else if (!/^\+?[\d\s-]{10,}$/.test(formData.phone)) {
-      newErrors.phone = text.errors.invalidPhone;
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = text.errors.emailRequired;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = text.errors.invalidEmail;
-    }
-    
-    const dayOfWeek = new Date(formData.date).toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT', { weekday: 'long' });
-    if (restaurantStatus.closedDays?.includes(dayOfWeek)) {
-      newErrors.date = `${text.errors.closed} ${dayOfWeek}s`;
+      newErrors.name = text.errors.nameRequired
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    if (!formData.phone.trim()) {
+      newErrors.phone = text.errors.phoneRequired
+    } else if (!/^\+?[\d\s-]{10,}$/.test(formData.phone)) {
+      newErrors.phone = text.errors.invalidPhone
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = text.errors.emailRequired
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = text.errors.invalidEmail
+    }
+
+    const dayOfWeek = new Date(formData.date).toLocaleDateString(language === "en" ? "en-US" : "pt-PT", {
+      weekday: "long",
+    })
+    if (restaurantStatus.closedDays?.includes(dayOfWeek)) {
+      newErrors.date = `${text.errors.closed} ${dayOfWeek}s`
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handlePersonsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setFormData({...formData, persons: value});
-    setShowLargeGroupMessage(parseInt(value) > 6);
-  };
+    const value = e.target.value
+    setFormData({ ...formData, persons: value })
+    setShowLargeGroupMessage(Number.parseInt(value) > 6)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (parseInt(formData.persons) > 6) {
-      setShowLargeGroupMessage(true);
-      return;
+    e.preventDefault()
+
+    if (Number.parseInt(formData.persons) > 6) {
+      setShowLargeGroupMessage(true)
+      return
     }
-    
+
     if (validateForm()) {
-      setIsSubmitting(true);
+      setIsSubmitting(true)
       try {
-        const nextId = await getNextReservationId();
+        const nextId = await getNextReservationId()
         const reservationData = {
           reservationId: nextId,
           ...formData,
           date: formData.date.toISOString(),
-          status: 'approved',
-          createdAt: new Date().toISOString()
-        };
+          status: "unread", // Changed from 'approved' to 'unread' to show notification
+          createdAt: new Date().toISOString(),
+        }
 
         // Add reservation to Firestore
-        await addDoc(collection(db, 'reservations'), reservationData);
+        await addDoc(collection(db, "reservations"), reservationData)
 
-        // Send email notification without reservation details
-        await sendEmail();
+        // Send email notification
+        try {
+          await sendEmail()
+          console.log("Email notification sent successfully")
+        } catch (emailError) {
+          console.error("Failed to send email notification:", emailError)
+          // Continue with the reservation process even if email fails
+        }
 
-        setReservationId(nextId);
-        setShowConfirmation(true);
+        setReservationId(nextId)
+        setShowConfirmation(true)
       } catch (error) {
-        console.error('Error submitting reservation:', error);
-        alert('Failed to submit reservation. Please try again.');
+        console.error("Error submitting reservation:", error)
+        alert("Failed to submit reservation. Please try again.")
       } finally {
-        setIsSubmitting(false);
+        setIsSubmitting(false)
       }
     }
-  };
+  }
 
   const getNextReservationId = async () => {
-    const reservationsRef = collection(db, 'reservations');
-    const q = query(reservationsRef, orderBy('reservationId', 'desc'));
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      return 'reservation1';
+    const reservationsRef = collection(db, "reservations")
+    const today = new Date()
+    const dayMonth = `${String(today.getDate()).padStart(2, "0")}${String(today.getMonth() + 1).padStart(2, "0")}`
+    const q = query(reservationsRef, orderBy("reservationId", "desc"))
+
+    const querySnapshot = await getDocs(q)
+    const reservationsToday = querySnapshot.docs.filter((doc) =>
+      doc.data().reservationId.startsWith(`reservation${dayMonth}`),
+    )
+
+    if (reservationsToday.length === 0) {
+      return `reservation${dayMonth}01`
     }
-    
-    const lastDoc = querySnapshot.docs[0];
-    const lastId = lastDoc.data().reservationId || lastDoc.data().id;
-    const lastNumber = parseInt(lastId.replace('reservation', ''));
-    return `reservation${lastNumber + 1}`;
-  };
+
+    const lastNumber = reservationsToday.length + 1
+    return `reservation${dayMonth}${String(lastNumber).padStart(2, "0")}`
+  }
 
   const ConfirmationMessage = () => (
     <div className="text-center space-y-6 py-8">
@@ -318,7 +337,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
           </div>
           <div className="flex justify-between">
             <span className="font-medium text-amber-300">{text.date}</span>
-            <span className="text-white">{formData.date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT')}</span>
+            <span className="text-white">
+              {formData.date.toLocaleDateString(language === "en" ? "en-US" : "pt-PT")}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="font-medium text-amber-300">{text.time}</span>
@@ -337,9 +358,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
         {text.done}
       </button>
     </div>
-  );
+  )
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
@@ -360,13 +381,12 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
               <p className="text-gray-300 mb-4">{text.largeGroupMessage}</p>
               <div className="flex items-center justify-center text-amber-400 font-bold text-xl">
                 <Phone className="h-6 w-6 mr-2" />
-                <a href="tel:+351920221805" className="hover:underline">{text.callNow}</a>
+                <a href="tel:+351920221805" className="hover:underline">
+                  {text.callNow}
+                </a>
               </div>
             </div>
-            <button
-              onClick={() => setShowLargeGroupMessage(false)}
-              className="text-amber-400 hover:underline"
-            >
+            <button onClick={() => setShowLargeGroupMessage(false)} className="text-amber-400 hover:underline">
               {text.goBack}
             </button>
           </div>
@@ -383,7 +403,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
               </button>
             </div>
 
-            {restaurantStatus.closedDays && restaurantStatus.closedDays.includes('Wednesday') && (
+            {restaurantStatus.closedDays && restaurantStatus.closedDays.includes("Wednesday") && (
               <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
                 <div className="flex">
                   <div className="ml-3">
@@ -399,9 +419,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                 <div className="flex">
                   <div className="ml-3">
                     <p className="text-amber-400 font-medium">{text.restaurantClosed}</p>
-                    <p className="text-sm text-amber-300">
-                      {text.restaurantClosedMessage}
-                    </p>
+                    <p className="text-sm text-amber-300">{text.restaurantClosedMessage}</p>
                   </div>
                 </div>
               </div>
@@ -412,13 +430,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                 <h3 className="font-medium text-amber-300">{text.contactInfo}</h3>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User  className="h-5 w-5 text-amber-400" />
+                    <User className="h-5 w-5 text-amber-400" />
                   </div>
                   <input
                     type="text"
                     placeholder={text.fullName}
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />
@@ -433,7 +451,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     type="tel"
                     placeholder={text.phone}
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />
@@ -448,7 +466,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     type="email"
                     placeholder={text.email}
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />
@@ -464,7 +482,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                   </div>
                   <DatePicker
                     selected={formData.date}
-                    onChange={(date) => setFormData({...formData, date: date || new Date()})}
+                    onChange={(date) => setFormData({ ...formData, date: date || new Date() })}
                     minDate={new Date()}
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
@@ -478,12 +496,14 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                   </div>
                   <select
                     value={formData.time}
-                    onChange={(e) => setFormData({...formData, time: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
-                    {timeSlots.map(time => (
-                      <option key={time} value={time}>{time}</option>
+                    {timeSlots.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -504,7 +524,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                       </option>
                     ))}
                   </select>
-                  {parseInt(formData.persons) > 6 && (
+                  {Number.parseInt(formData.persons) > 6 && (
                     <p className="text-amber-400 text-sm mt-1">{text.largeGroupWarning}</p>
                   )}
                 </div>
@@ -515,7 +535,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                 <div>
                   <select
                     value={formData.occasion}
-                    onChange={(e) => setFormData({...formData, occasion: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, occasion: e.target.value })}
                     className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
@@ -531,7 +551,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                 <div>
                   <select
                     value={formData.preferredSeating}
-                    onChange={(e) => setFormData({...formData, preferredSeating: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, preferredSeating: e.target.value })}
                     className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
@@ -542,19 +562,19 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     <option value="private">{text.seating.private}</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <textarea
                     placeholder={text.requests}
                     value={formData.specialRequests}
-                    onChange={(e) => setFormData({...formData, specialRequests: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
                     className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     rows={3}
                     disabled={isSubmitting}
                   />
                 </div>
               </div>
-              
+
               <button
                 type="submit"
                 className="w-full bg-amber-500 text-black font-bold py-3 px-6 rounded-md hover:bg-amber-400 transition-colors disabled:bg-amber-600 disabled:opacity-70"
@@ -567,7 +587,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default ReservationModal;
+export default ReservationModal

@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAXTQz609yoYC4XL4bUaVG2j0SwuFFcRLM",
@@ -17,6 +17,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
+
+// Configure Firestore with custom settings to prevent CORS issues
+const firestoreSettings = {
+  experimentalForceLongPolling: true, // Use long polling instead of WebSockets
+  useFetchStreams: false, // Disable fetch streams
+  ignoreUndefinedProperties: true
+};
+
+// Initialize Firestore with custom settings
+initializeFirestore(app, firestoreSettings);
+
+// Get the initialized Firestore instance
 const db = getFirestore(app);
 
 export { app, analytics, auth, db };
