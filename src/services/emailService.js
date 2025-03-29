@@ -1,8 +1,3 @@
-import { Resend } from "resend"
-
-// Initialize Resend with the provided API key
-const resend = new Resend("re_j2wxDqBR_5w2hhhyQLxkNSxYaXWCARMGZ")
-
 export const sendEmail = async () => {
   try {
     const emailHtml = `
@@ -14,7 +9,7 @@ export const sendEmail = async () => {
         <p style="font-size: 16px; line-height: 1.5;">Please check the admin dashboard to view and manage this reservation.</p>
         
         <div style="margin-top: 30px; text-align: center;">
-          <a href="https://blue-whale-asian-fusion.vercel.app/admin/reservations" 
+          <a href="https://bluewhalelagos/admin/reservations" 
              style="background-color: #1a365d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
             View Reservation
           </a>
@@ -24,20 +19,27 @@ export const sendEmail = async () => {
           This is an automated notification from the Blue Whale Reservation System.
         </p>
       </div>
-    `
+    `;
 
-    const response = await resend.emails.send({
-      from: "Blue Whale Reservations <onboarding@resend.dev>",
-      to: "bluewhalelagos@gmail.com",
-      subject: "New Reservation at Blue Whale Restaurant",
-      html: emailHtml,
-    })
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: { name: "Blue Whale Reservations", email: "bluewhaleasian@gmail.com" },
+        to: [{ email: "bluewhaleasian@gmail.com", name: "Blue Whale Admin" }],
+        subject: "New Reservation at Blue Whale Restaurant",
+        htmlContent: emailHtml
+      })
+    });
 
-    console.log("Email sent successfully:", response)
-    return response
+    const result = await response.json();
+    console.log("Email sent successfully:", result);
+    return result;
   } catch (error) {
-    console.error("Error sending email:", error)
-    throw error
+    console.error("Error sending email:", error);
+    throw error;
   }
-}
-
+};
