@@ -28,7 +28,7 @@ export const sendEmail = async () => {
 
     const response = await resend.emails.send({
       from: "Blue Whale Reservations <onboarding@resend.dev>",
-      to: "bluewhaleasian@gmail.com",
+      to: "bluewhalelagos@gmail.com",
       subject: "New Reservation at Blue Whale Restaurant",
       html: emailHtml,
     })
