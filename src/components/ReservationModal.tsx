@@ -4,7 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from 'lucide-react';
 import { db } from '../firebase/config';
 import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
-import { sendReservationEmail } from '../firebase/functions';
+import { sendEmail } from '../services/emailService'; // Adjust the path accordingly
 
 interface RestaurantStatus {
   isOpen: boolean;
@@ -34,6 +34,9 @@ const translations = {
     specialRequests: "Special Requests",
     occasion: "Select an occasion (optional)",
     occasions: {
+      birthday: "Birthday",
+      anniversary: "Anniversary",
+      business: "Business Meal",
       date: "Date Night",
       other: "Other"
     },
@@ -88,6 +91,9 @@ const translations = {
     specialRequests: "Pedidos Especiais",
     occasion: "Selecione uma ocasião (opcional)",
     occasions: {
+      birthday: "Aniversário",
+      anniversary: "Aniversário de Casamento",
+      business: "Refeição de Negócios",
       date: "Jantar Romântico",
       other: "Outro"
     },
@@ -135,6 +141,7 @@ const translations = {
 };
 
 const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, language }) => {
+  const text = translations[language];
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -160,28 +167,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     closingTime: "22:00",
     specialClosures: []
   });
-
-  const text = translations[language];
-
-  useEffect(() => {
-    const fetchRestaurantStatus = async () => {
-      setIsLoading(true);
-      try {
-        const statusDoc = await getDoc(doc(db, 'settings', 'restaurantStatus'));
-        if (statusDoc.exists()) {
-          setRestaurantStatus(statusDoc.data() as RestaurantStatus);
-        }
-      } catch (error) {
-        console.error('Error fetching restaurant status:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (isOpen) {
-      fetchRestaurantStatus();
-    }
-  }, [isOpen]);
 
   const generateTimeSlots = () => {
     const slots = [];
@@ -214,20 +199,25 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
 
   const timeSlots = generateTimeSlots();
 
-  const getNextReservationId = async () => {
-    const reservationsRef = collection(db, 'reservations');
-    const q = query(reservationsRef, orderBy('reservationId', 'desc'));
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      return 'reservation1';
+  useEffect(() => {
+    const fetchRestaurantStatus = async () => {
+      setIsLoading(true);
+      try {
+        const statusDoc = await getDoc(doc(db, 'settings', 'restaurantStatus'));
+        if (statusDoc.exists()) {
+          setRestaurantStatus(statusDoc.data() as RestaurantStatus);
+        }
+      } catch (error) {
+        console.error('Error fetching restaurant status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchRestaurantStatus();
     }
-    
-    const lastDoc = querySnapshot.docs[0];
-    const lastId = lastDoc.data().reservationId;
-    const lastNumber = parseInt(lastId.replace('reservation', ''));
-    return `reservation${lastNumber + 1}`;
-  };
+  }, [isOpen]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -286,18 +276,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
         // Add reservation to Firestore
         await addDoc(collection(db, 'reservations'), reservationData);
 
-        // Send notification through Firestore
-        await sendReservationEmail({
-          id: nextId,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          date: formData.date.toISOString(),
-          time: formData.time,
-          persons: formData.persons,
-          occasion: formData.occasion,
-          specialRequests: formData.specialRequests
-        });
+        // Send email notification without reservation details
+        await sendEmail();
 
         setReservationId(nextId);
         setShowConfirmation(true);
@@ -310,23 +290,19 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     }
   };
 
-  const isDateDisabled = (date: Date) => {
-    const dayOfWeek = date.getDay();
-    if (dayOfWeek === 3) {
-      return true;
+  const getNextReservationId = async () => {
+    const reservationsRef = collection(db, 'reservations');
+    const q = query(reservationsRef, orderBy('reservationId', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return 'reservation1';
     }
     
-    if (restaurantStatus.closedDays) {
-      const dayName = date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT', { weekday: 'long' });
-      if (restaurantStatus.closedDays.includes(dayName)) {
-        return true;
-      }
-    }
-    
-    const dateStr = date.toISOString().split('T')[0];
-    return restaurantStatus.specialClosures?.some(
-      closure => closure.date.split('T')[0] === dateStr
-    ) || false;
+    const lastDoc = querySnapshot.docs[0];
+    const lastId = lastDoc.data().reservationId || lastDoc.data().id;
+    const lastNumber = parseInt(lastId.replace('reservation', ''));
+    return `reservation${lastNumber + 1}`;
   };
 
   const ConfirmationMessage = () => (
@@ -342,9 +318,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
           </div>
           <div className="flex justify-between">
             <span className="font-medium text-amber-300">{text.date}</span>
-            <span className="text-white">
-              {formData.date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT')}
-            </span>
+            <span className="text-white">{formData.date.toLocaleDateString(language === 'en' ? 'en-US' : 'pt-PT')}</span>
           </div>
           <div className="flex justify-between">
             <span className="font-medium text-amber-300">{text.time}</span>
@@ -380,7 +354,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
             <div className="bg-black/60 p-6 rounded-lg border border-amber-400/20">
               <Users className="h-12 w-12 text-amber-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-amber-400 mb-2">{text.largeGroupHeading}</h3>
@@ -390,7 +363,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                 <a href="tel:+351920221805" className="hover:underline">{text.callNow}</a>
               </div>
             </div>
-            
             <button
               onClick={() => setShowLargeGroupMessage(false)}
               className="text-amber-400 hover:underline"
@@ -411,13 +383,36 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
               </button>
             </div>
 
+            {restaurantStatus.closedDays && restaurantStatus.closedDays.includes('Wednesday') && (
+              <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-amber-400 font-medium">{text.closedDay}</p>
+                    <p className="text-sm text-amber-300">{text.closedDayMessage}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!restaurantStatus.isOpen && (
+              <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-amber-400 font-medium">{text.restaurantClosed}</p>
+                    <p className="text-sm text-amber-300">
+                      {text.restaurantClosedMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-4">
                 <h3 className="font-medium text-amber-300">{text.contactInfo}</h3>
-                
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-amber-400" />
+                    <User  className="h-5 w-5 text-amber-400" />
                   </div>
                   <input
                     type="text"
@@ -463,7 +458,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
 
               <div className="border-t border-amber-400/20 pt-5 space-y-4">
                 <h3 className="font-medium text-amber-300">{text.reservationDetails}</h3>
-                
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Calendar className="h-5 w-5 text-amber-400" />
@@ -472,7 +466,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     selected={formData.date}
                     onChange={(date) => setFormData({...formData, date: date || new Date()})}
                     minDate={new Date()}
-                    filterDate={date => !isDateDisabled(date)}
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />
@@ -493,7 +486,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                       <option key={time} value={time}>{time}</option>
                     ))}
                   </select>
-                  {errors.time && <p className="text-amber-500 text-sm mt-1">{errors.time}</p>}
                 </div>
 
                 <div className="relative">
@@ -520,7 +512,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
 
               <div className="border-t border-amber-400/20 pt-5 space-y-4">
                 <h3 className="font-medium text-amber-300">{text.specialRequests}</h3>
-                
                 <div>
                   <select
                     value={formData.occasion}
@@ -529,6 +520,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     disabled={isSubmitting}
                   >
                     <option value="">{text.occasion}</option>
+                    <option value="birthday">{text.occasions.birthday}</option>
+                    <option value="anniversary">{text.occasions.anniversary}</option>
+                    <option value="business">{text.occasions.business}</option>
                     <option value="date">{text.occasions.date}</option>
                     <option value="other">{text.occasions.other}</option>
                   </select>
@@ -574,6 +568,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
       </div>
     </div>
   );
-};
+}
 
 export default ReservationModal;

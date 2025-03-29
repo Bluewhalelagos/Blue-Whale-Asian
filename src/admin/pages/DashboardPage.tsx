@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  UtensilsCrossed, 
-  CalendarDays, 
+import {
+  Users,
+  UtensilsCrossed,
+  CalendarDays,
   Truck,
   TrendingUp,
   Eye,
@@ -14,14 +14,14 @@ import {
   Trash2
 } from 'lucide-react';
 import { db } from '../../firebase/config';
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  orderBy, 
-  limit, 
-  doc, 
-  getDoc, 
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  doc,
+  getDoc,
   updateDoc,
   setDoc,
   deleteDoc
@@ -84,8 +84,6 @@ const DashboardPage = () => {
     applications: 0,
     deliveries: 18
   });
-
-  // Initialize todaysSpecial as an empty array
   const [todaysSpecial, setTodaysSpecial] = useState<TodaysSpecial[]>([]);
   const [newTodaysSpecial, setNewTodaysSpecial] = useState<TodaysSpecial>({
     name: '',
@@ -94,8 +92,6 @@ const DashboardPage = () => {
     image: '',
     isActive: false
   });
-
-  // Initialize offers state
   const [offers, setOffers] = useState<Offer[]>([]);
   const [newOffer, setNewOffer] = useState<Offer>({
     title: '',
@@ -105,6 +101,7 @@ const DashboardPage = () => {
     isActive: true,
     showOnLoad: true
   });
+  const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([]);
 
   const addNewTodaysSpecial = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +129,6 @@ const DashboardPage = () => {
 
   const removeTodaysSpecial = async (id: string) => {
     if (!window.confirm('Are you sure you want to remove this special?')) return;
-    
     setIsUpdating(true);
     try {
       await deleteDoc(doc(db, 'specials', id));
@@ -149,7 +145,6 @@ const DashboardPage = () => {
   const toggleSpecialStatus = async (id: string) => {
     const special = todaysSpecial.find(s => s.id === id);
     if (!special) return;
-
     setIsUpdating(true);
     try {
       const updatedSpecial = { ...special, isActive: !special.isActive };
@@ -166,7 +161,6 @@ const DashboardPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch contacts
         const contactsQuery = query(
           collection(db, 'contacts'),
           orderBy('createdAt', 'desc'),
@@ -179,7 +173,6 @@ const DashboardPage = () => {
         })) as Contact[];
         setContacts(contactsList);
 
-        // Fetch reservations
         const reservationsQuery = query(
           collection(db, 'reservations'),
           orderBy('date', 'desc'),
@@ -192,13 +185,11 @@ const DashboardPage = () => {
         })) as Reservation[];
         setReservations(reservationsList);
 
-        // Fetch restaurant status
         const statusDoc = await getDoc(doc(db, 'settings', 'restaurantStatus'));
         if (statusDoc.exists()) {
           setRestaurantStatus(statusDoc.data() as RestaurantStatus);
         }
 
-        // Fetch today's specials
         const specialsSnapshot = await getDocs(collection(db, 'specials'));
         const specialsList = specialsSnapshot.docs.map(doc => ({
           id: doc.id,
@@ -206,7 +197,6 @@ const DashboardPage = () => {
         })) as TodaysSpecial[];
         setTodaysSpecial(specialsList);
 
-        // Fetch offers
         const offersQuery = query(collection(db, 'offers'));
         const offersSnapshot = await getDocs(offersQuery);
         const offersList = offersSnapshot.docs.map(doc => ({
@@ -215,19 +205,28 @@ const DashboardPage = () => {
         })) as Offer[];
         setOffers(offersList);
 
-        // Update stats
         setStats(prev => ({
           ...prev,
           reservations: reservationsSnapshot.size,
           applications: contactsSnapshot.size
         }));
+
+        const upcomingDates = reservationsList.reduce((acc: { [key: string]: number }, reservation) => {
+          const date = new Date(reservation.date).toLocaleDateString();
+          acc[date] = (acc[date] || 0) + 1;
+          return acc;
+        }, {});
+        const sortedDates = Object.entries(upcomingDates)
+          .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+          .slice(0, 4)
+          .map(([date, count]) => ({ date, count }));
+        setUpcomingReservations(sortedDates);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
@@ -239,7 +238,6 @@ const DashboardPage = () => {
         isOpen: !restaurantStatus.isOpen,
         lastUpdated: new Date().toISOString()
       };
-      
       await updateDoc(doc(db, 'settings', 'restaurantStatus'), updatedStatus);
       setRestaurantStatus(updatedStatus);
     } catch (error) {
@@ -276,7 +274,6 @@ const DashboardPage = () => {
 
   const removeOffer = async (id: string) => {
     if (!window.confirm('Are you sure you want to remove this offer?')) return;
-    
     setIsUpdating(true);
     try {
       await deleteDoc(doc(db, 'offers', id));
@@ -293,7 +290,6 @@ const DashboardPage = () => {
   const toggleOfferStatus = async (offerId: string) => {
     const offerToUpdate = offers.find(o => o.id === offerId);
     if (!offerToUpdate) return;
-
     try {
       const updatedOffer = { ...offerToUpdate, isActive: !offerToUpdate.isActive };
       await updateDoc(doc(db, 'offers', offerId), updatedOffer);
@@ -307,7 +303,6 @@ const DashboardPage = () => {
   const toggleOfferShowOnLoad = async (offerId: string) => {
     const offerToUpdate = offers.find(o => o.id === offerId);
     if (!offerToUpdate) return;
-
     try {
       const updatedOffer = { ...offerToUpdate, showOnLoad: !offerToUpdate.showOnLoad };
       await updateDoc(doc(db, 'offers', offerId), updatedOffer);
@@ -319,30 +314,30 @@ const DashboardPage = () => {
   };
 
   const statsCards = [
-    { 
-      title: 'Total Reservations', 
-      value: stats.reservations.toString(), 
+    {
+      title: 'Total Reservations',
+      value: stats.reservations.toString(),
       icon: CalendarDays,
       change: '+12%',
       color: 'bg-blue-500'
     },
-    { 
-      title: 'Menu Items', 
-      value: stats.menuItems.toString(), 
+    {
+      title: 'Menu Items',
+      value: stats.menuItems.toString(),
       icon: UtensilsCrossed,
       change: '+3%',
       color: 'bg-amber-500'
     },
-    { 
-      title: 'Contact Messages', 
-      value: stats.applications.toString(), 
+    {
+      title: 'Contact Messages',
+      value: stats.applications.toString(),
       icon: Users,
       change: '+5%',
       color: 'bg-green-500'
     },
-    { 
-      title: 'Active Deliveries', 
-      value: stats.deliveries.toString(), 
+    {
+      title: 'Active Deliveries',
+      value: stats.deliveries.toString(),
       icon: Truck,
       change: '+8%',
       color: 'bg-purple-500'
@@ -355,7 +350,6 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Restaurant Status Control */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -366,7 +360,6 @@ const DashboardPage = () => {
             Last updated: {new Date(restaurantStatus.lastUpdated).toLocaleString()}
           </span>
         </div>
-        
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className={`h-14 w-14 rounded-full flex items-center justify-center ${
@@ -385,7 +378,6 @@ const DashboardPage = () => {
               </p>
             </div>
           </div>
-          
           <button
             onClick={toggleRestaurantStatus}
             disabled={isUpdating}
@@ -399,15 +391,11 @@ const DashboardPage = () => {
           </button>
         </div>
       </div>
-
-      {/* Today's Special Section */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center mb-4">
           <ChefHat className="h-6 w-6 text-amber-500 mr-2" />
           <h2 className="text-lg font-semibold text-gray-900">Today's Special</h2>
         </div>
-
-        {/* Display current specials */}
         {todaysSpecial.length > 0 && (
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             {todaysSpecial.map((special) => (
@@ -448,8 +436,6 @@ const DashboardPage = () => {
             ))}
           </div>
         )}
-        
-        {/* Add new special form */}
         <form onSubmit={addNewTodaysSpecial} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -475,7 +461,6 @@ const DashboardPage = () => {
               />
             </div>
           </div>
-          
           <div>
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
@@ -486,7 +471,6 @@ const DashboardPage = () => {
               required
             />
           </div>
-          
           <div>
             <label className="block text-sm font-medium text-gray-700">Image URL</label>
             <input
@@ -497,7 +481,6 @@ const DashboardPage = () => {
               required
             />
           </div>
-          
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -509,7 +492,6 @@ const DashboardPage = () => {
               Active (Show on menu)
             </label>
           </div>
-          
           <div className="flex justify-end">
             <button
               type="submit"
@@ -522,15 +504,11 @@ const DashboardPage = () => {
           </div>
         </form>
       </div>
-
-      {/* Offers Section */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center mb-6">
           <Tag className="h-6 w-6 text-amber-500 mr-2" />
           <h2 className="text-lg font-semibold text-gray-900">Special Offers</h2>
         </div>
-
-        {/* Add New Offer Form */}
         <form onSubmit={addNewOffer} className="mb-8 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -556,7 +534,6 @@ const DashboardPage = () => {
               />
             </div>
           </div>
-          
           <div>
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
@@ -567,7 +544,6 @@ const DashboardPage = () => {
               required
             />
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Valid Until</label>
@@ -592,7 +568,6 @@ const DashboardPage = () => {
               </label>
             </div>
           </div>
-          
           <div className="flex justify-end">
             <button
               type="submit"
@@ -604,8 +579,6 @@ const DashboardPage = () => {
             </button>
           </div>
         </form>
-
-        {/* Active Offers List */}
         <div className="space-y-4">
           <h3 className="text-md font-medium text-gray-900">Current Offers</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -644,16 +617,6 @@ const DashboardPage = () => {
                     >
                       {offer.isActive ? 'Active' : 'Inactive'}
                     </button>
-                    <button
-                      onClick={() => offer.id && toggleOfferShowOnLoad(offer.id)}
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        offer.showOnLoad
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {offer.showOnLoad ? 'Shows on Load' : 'Hidden on Load'}
-                    </button>
                   </div>
                   <button
                     onClick={() => offer.id && removeOffer(offer.id)}
@@ -667,8 +630,6 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsCards.map((stat, index) => (
           <div key={index} className="bg-white rounded-lg shadow p-6">
@@ -689,8 +650,6 @@ const DashboardPage = () => {
           </div>
         ))}
       </div>
-
-      {/* Latest Messages */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Latest Messages</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -716,8 +675,6 @@ const DashboardPage = () => {
           ))}
         </div>
       </div>
-
-      {/* Latest Reservations */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Latest Reservations</h2>
         <div className="overflow-x-auto">
@@ -740,8 +697,7 @@ const DashboardPage = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{reservation.time}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{reservation.persons}</td>
-                  <td className="px-6 py-4 whitespace-now
-rap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       reservation.status === 'approved' ? 'bg-green-100 text-green-800' :
                       reservation.status === 'cancelled' ? 'bg-red-100 text-red-800' :
@@ -756,8 +712,6 @@ rap">
           </table>
         </div>
       </div>
-
-      {/* Message Modal */}
       {selectedContact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full m-4">
@@ -782,8 +736,28 @@ rap">
           </div>
         </div>
       )}
+      {upcomingReservations.length > 0 && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full m-4">
+            <h3 className="text-xl font-semibold text-gray-900">Upcoming Reservations</h3>
+            <ul className="mt-4">
+              {upcomingReservations.map((reservation) => (
+                <li key={reservation.date} className="text-gray-700">
+                  {reservation.date}: {reservation.count} reservation(s)
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setUpcomingReservations([])}
+              className="mt-4 bg-red-500 text-white py-2 px-4 rounded-lg"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default DashboardPage;
+export default DashboardPage;   

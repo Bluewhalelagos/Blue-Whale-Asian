@@ -9,31 +9,51 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { auth } from '../../firebase/config';
+import { auth, db } from '../../firebase/config';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import logoImage from '../../BlueWhale-Final-logo1.png';
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreservedCount, setUnreservedCount] = useState(0);
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // Authentication check
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) {
         navigate('/admin/login');
       }
     });
 
+    // Reservations notification tracking
+    const reservationsRef = collection(db, 'reservations');
+    const unreadQuery = query(reservationsRef, where('status', '==', 'unread'));
+    
+    const unsubscribeReservations = onSnapshot(unreadQuery, (snapshot) => {
+      setUnreservedCount(snapshot.docs.length);
+    });
+
     // Close sidebar when changing routes on mobile
     setSidebarOpen(false);
 
-    return () => unsubscribe();
-  }, [navigate, location.pathname]);
+    // Cleanup subscriptions
+    return () => {
+      unsubscribeAuth();
+      unsubscribeReservations();
+    };
+  }, [navigate]);
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-    { icon: CalendarDays, label: 'Reservations', path: '/admin/reservations' },
+    { 
+      icon: CalendarDays, 
+      label: 'Reservations', 
+      path: '/admin/reservations',
+      notifications: unreservedCount
+    },
     { icon: Users, label: 'Careers', path: '/admin/careers' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
@@ -103,7 +123,7 @@ const AdminLayout = () => {
                     navigate(item.path);
                     setSidebarOpen(false);
                   }}
-                  className={`flex items-center space-x-3 w-full px-4 py-3 mb-2 rounded-md transition-colors ${
+                  className={`flex items-center space-x-3 w-full px-4 py-3 mb-2 rounded-md transition-colors relative ${
                     isActive 
                       ? 'bg-blue-700 text-white' 
                       : 'text-blue-100 hover:bg-blue-800 hover:text-white'
@@ -111,6 +131,11 @@ const AdminLayout = () => {
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
+                  {item.notifications && item.notifications > 0 && (
+                    <span className="absolute right-4 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                      {item.notifications}
+                    </span>
+                  )}
                   {isActive && <div className="w-1 h-6 bg-yellow-400 ml-auto rounded-full"></div>}
                 </button>
               );
@@ -130,7 +155,7 @@ const AdminLayout = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Remains the same as in the original code */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Desktop Header */}
         <header className="hidden md:block bg-white shadow-sm border-b border-gray-200">
