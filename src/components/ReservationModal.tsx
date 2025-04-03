@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
-import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle } from "lucide-react"
+import { X, Phone, Calendar, Clock, Users, Mail, User, CheckCircle, Ban } from "lucide-react"
 import { db } from "../firebase/config"
 import { collection, addDoc, query, orderBy, getDocs, doc, getDoc } from "firebase/firestore"
 import { sendEmail } from "../utils/sendEmail.js"
@@ -16,6 +16,11 @@ interface RestaurantStatus {
   closingTime: string
   specialClosures: {
     date: string
+    reason?: string
+  }[]
+  blockedTimeSlots?: {
+    date: string
+    time: string
     reason?: string
   }[]
 }
@@ -59,6 +64,8 @@ const translations: Record<string, any> = {
     restaurantClosed: "NOTICE",
     restaurantClosedMessage:
       "The restaurant is currently closed for regular service. You can still make reservations for future dates.",
+    blockedTimeSlot: "TIME SLOT UNAVAILABLE",
+    blockedTimeSlotMessage: "This time slot is not available for reservations. Please select another time.",
     largeGroupTitle: "GROUP RESERVATION",
     largeGroupHeading: "Large Group Booking",
     largeGroupMessage:
@@ -84,6 +91,7 @@ const translations: Record<string, any> = {
       invalidEmail: "Invalid email address",
       closed: "We are closed on",
       hours: "Restaurant hours are",
+      blockedTimeSlot: "This time slot is not available",
     },
   },
   pt: {
@@ -118,6 +126,8 @@ const translations: Record<string, any> = {
     restaurantClosed: "AVISO",
     restaurantClosedMessage:
       "O restaurante está atualmente fechado para serviço regular. Você ainda pode fazer reservas para datas futuras.",
+    blockedTimeSlot: "HORÁRIO INDISPONÍVEL",
+    blockedTimeSlotMessage: "Este horário não está disponível para reservas. Por favor, selecione outro horário.",
     largeGroupTitle: "RESERVA DE GRUPO",
     largeGroupHeading: "Reserva para Grupo Grande",
     largeGroupMessage:
@@ -143,6 +153,7 @@ const translations: Record<string, any> = {
       invalidEmail: "Endereço de email inválido",
       closed: "Estamos fechados às",
       hours: "Horário do restaurante é das",
+      blockedTimeSlot: "Este horário não está disponível",
     },
   },
 }
@@ -173,9 +184,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     openingTime: "17:00",
     closingTime: "22:00",
     specialClosures: [],
+    blockedTimeSlots: [],
   })
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([])
+  const [isTimeSlotBlocked, setIsTimeSlotBlocked] = useState(false)
+  const [blockedTimeSlotReason, setBlockedTimeSlotReason] = useState<string>("")
 
-  const generateTimeSlots = () => {
+  const generateTimeSlots = (selectedDate: Date) => {
     const slots = []
     const opening = restaurantStatus?.openingTime || "17:00"
     const closing = restaurantStatus?.closingTime || "22:00"
@@ -190,12 +205,25 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
       closingTimeMinutes += 24 * 60
     }
 
+    // Format the selected date as YYYY-MM-DD for comparison with blocked slots
+    const formattedDate = selectedDate.toISOString().split("T")[0]
+
+    // Get blocked time slots for the selected date
+    const blockedSlots = (restaurantStatus.blockedTimeSlots || [])
+      .filter((slot) => slot.date === formattedDate)
+      .map((slot) => slot.time)
+
     for (let hour = 0; hour < 24; hour++) {
       for (const minute of ["00", "15", "30", "45"]) {
         const currentTimeMinutes = hour * 60 + Number.parseInt(minute)
         const timeValue = `${hour.toString().padStart(2, "0")}:${minute}`
 
-        if (currentTimeMinutes >= openingTimeMinutes && currentTimeMinutes <= closingTimeMinutes) {
+        // Only add the time slot if it's within opening hours AND not blocked
+        if (
+          currentTimeMinutes >= openingTimeMinutes &&
+          currentTimeMinutes <= closingTimeMinutes &&
+          !blockedSlots.includes(timeValue)
+        ) {
           slots.push(timeValue)
         }
       }
@@ -204,7 +232,36 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     return slots
   }
 
-  const timeSlots = generateTimeSlots()
+  // Update available time slots when date changes
+  useEffect(() => {
+    if (restaurantStatus) {
+      const slots = generateTimeSlots(formData.date)
+      setAvailableTimeSlots(slots)
+
+      // If current selected time is not available, select the first available time
+      if (slots.length > 0 && !slots.includes(formData.time)) {
+        setFormData((prev) => ({ ...prev, time: slots[0] }))
+      }
+    }
+  }, [formData.date, restaurantStatus])
+
+  // Check if selected time slot is blocked when time changes
+  useEffect(() => {
+    if (restaurantStatus.blockedTimeSlots && restaurantStatus.blockedTimeSlots.length > 0) {
+      const formattedDate = formData.date.toISOString().split("T")[0]
+      const blockedSlot = restaurantStatus.blockedTimeSlots.find(
+        (slot) => slot.date === formattedDate && slot.time === formData.time,
+      )
+
+      if (blockedSlot) {
+        setIsTimeSlotBlocked(true)
+        setBlockedTimeSlotReason(blockedSlot.reason || "")
+      } else {
+        setIsTimeSlotBlocked(false)
+        setBlockedTimeSlotReason("")
+      }
+    }
+  }, [formData.time, formData.date, restaurantStatus.blockedTimeSlots])
 
   useEffect(() => {
     const fetchRestaurantStatus = async () => {
@@ -212,7 +269,17 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
       try {
         const statusDoc = await getDoc(doc(db, "settings", "restaurantStatus"))
         if (statusDoc.exists()) {
-          setRestaurantStatus(statusDoc.data() as RestaurantStatus)
+          const statusData = statusDoc.data() as RestaurantStatus
+          setRestaurantStatus(statusData)
+
+          // Generate available time slots for the current date
+          const slots = generateTimeSlots(formData.date)
+          setAvailableTimeSlots(slots)
+
+          // If current selected time is not available, select the first available time
+          if (slots.length > 0 && !slots.includes(formData.time)) {
+            setFormData((prev) => ({ ...prev, time: slots[0] }))
+          }
         }
       } catch (error) {
         console.error("Error fetching restaurant status:", error)
@@ -252,6 +319,11 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
       newErrors.date = `${text.errors.closed} ${dayOfWeek}s`
     }
 
+    // Check if the selected time slot is blocked
+    if (isTimeSlotBlocked) {
+      newErrors.time = text.errors.blockedTimeSlot
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -260,6 +332,12 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     const value = e.target.value
     setFormData({ ...formData, persons: value })
     setShowLargeGroupMessage(Number.parseInt(value) > 6)
+  }
+
+  const handleDateChange = (date: Date | null) => {
+    if (date) {
+      setFormData({ ...formData, date })
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -424,6 +502,21 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
               </div>
             )}
 
+            {isTimeSlotBlocked && (
+              <div className="bg-black/40 border-l-4 border-red-500 p-4 mb-6">
+                <div className="flex">
+                  <Ban className="h-5 w-5 text-red-400 mr-2" />
+                  <div>
+                    <p className="text-red-400 font-medium">{text.blockedTimeSlot}</p>
+                    <p className="text-sm text-red-300">{text.blockedTimeSlotMessage}</p>
+                    {blockedTimeSlotReason && (
+                      <p className="text-sm text-gray-400 mt-1">Reason: {blockedTimeSlotReason}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-4">
                 <h3 className="font-medium text-amber-300">{text.contactInfo}</h3>
@@ -480,13 +573,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     <Calendar className="h-5 w-5 text-amber-400" />
                   </div>
                   <DatePicker
-                  selected={formData.date}
-                  onChange={(date) => setFormData({ ...formData, date: date || new Date() })}
-                  minDate={new Date()}
-                  filterDate={(date) => date.getDay() !== 3}
-                  className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
-                  disabled={isSubmitting}
-                />
+                    selected={formData.date}
+                    onChange={handleDateChange}
+                    minDate={new Date()}
+                    filterDate={(date) => date.getDay() !== 3} // Filter out Wednesdays
+                    className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
+                    disabled={isSubmitting}
+                  />
                   {errors.date && <p className="text-amber-500 text-sm mt-1">{errors.date}</p>}
                 </div>
 
@@ -500,12 +593,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   >
-                    {timeSlots.map((time) => (
+                    {availableTimeSlots.map((time) => (
                       <option key={time} value={time}>
                         {time}
                       </option>
                     ))}
                   </select>
+                  {errors.time && <p className="text-amber-500 text-sm mt-1">{errors.time}</p>}
                 </div>
 
                 <div className="relative">
@@ -578,7 +672,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
               <button
                 type="submit"
                 className="w-full bg-amber-500 text-black font-bold py-3 px-6 rounded-md hover:bg-amber-400 transition-colors disabled:bg-amber-600 disabled:opacity-70"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isTimeSlotBlocked}
               >
                 {isSubmitting ? text.submitting : text.bookButton}
               </button>

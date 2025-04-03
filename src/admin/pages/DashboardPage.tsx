@@ -16,6 +16,8 @@ import {
   Save,
   Trash2,
   Check,
+  Clock,
+  Ban,
 } from "lucide-react"
 import { db } from "../../firebase/config"
 import {
@@ -29,6 +31,8 @@ import {
   updateDoc,
   setDoc,
   deleteDoc,
+  where,
+  Timestamp,
 } from "firebase/firestore"
 
 interface Contact {
@@ -58,6 +62,16 @@ interface Reservation {
 interface RestaurantStatus {
   isOpen: boolean
   lastUpdated: string
+  blockedTimeSlots?: {
+    date: string
+    time: string
+    reason?: string
+  }[]
+}
+
+interface AdminSession {
+  lastLogin: Timestamp
+  userId: string
 }
 
 interface TodaysSpecial {
@@ -84,6 +98,106 @@ interface UpcomingReservationCount {
   count: number
 }
 
+interface BlockTimeSlotModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onBlock: (date: string, time: string, reason: string) => Promise<void>
+}
+
+const BlockTimeSlotModal: React.FC<BlockTimeSlotModalProps> = ({ isOpen, onClose, onBlock }) => {
+  const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0])
+  const [time, setTime] = useState<string>("18:00")
+  const [reason, setReason] = useState<string>("")
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
+  if (!isOpen) return null
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      await onBlock(date, time, reason)
+      onClose()
+    } catch (error) {
+      console.error("Error blocking time slot:", error)
+      alert("Failed to block time slot")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Block Time Slot</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+              min={new Date().toISOString().split("T")[0]}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Time</label>
+            <select
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+              required
+            >
+              {Array.from({ length: 24 }, (_, i) => i).map((hour) =>
+                ["00", "15", "30", "45"].map((minute) => {
+                  const timeValue = `${hour.toString().padStart(2, "0")}:${minute}`
+                  return (
+                    <option key={timeValue} value={timeValue}>
+                      {timeValue}
+                    </option>
+                  )
+                }),
+              )}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Reason (optional)</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+              rows={3}
+            />
+          </div>
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+            >
+              {isSubmitting ? "Blocking..." : "Block Time Slot"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 const DashboardPage = () => {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
@@ -94,6 +208,7 @@ const DashboardPage = () => {
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
     lastUpdated: new Date().toISOString(),
+    blockedTimeSlots: [],
   })
   const [stats, setStats] = useState({
     reservations: 0,
@@ -118,7 +233,18 @@ const DashboardPage = () => {
     isActive: true,
     showOnLoad: true,
   })
-  const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservationCount[]>([])
+  const [newReservations, setNewReservations] = useState<Reservation[]>([])
+  const [showNewReservationsPopup, setShowNewReservationsPopup] = useState(false)
+  const [showBlockTimeSlotModal, setShowBlockTimeSlotModal] = useState(false)
+  const [blockedTimeSlots, setBlockedTimeSlots] = useState<RestaurantStatus["blockedTimeSlots"]>([])
+
+  // Use sessionStorage to track if popup has been shown in this session
+  useEffect(() => {
+    const popupShownThisSession = sessionStorage.getItem("reservationPopupShown")
+    if (popupShownThisSession === "true") {
+      setShowNewReservationsPopup(false)
+    }
+  }, [])
 
   const addNewTodaysSpecial = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -175,9 +301,94 @@ const DashboardPage = () => {
     }
   }
 
+  const blockTimeSlot = async (date: string, time: string, reason: string) => {
+    setIsUpdating(true)
+    try {
+      const newBlockedSlot = { date, time, reason }
+      const updatedBlockedSlots = [...(restaurantStatus.blockedTimeSlots || []), newBlockedSlot]
+
+      const updatedStatus = {
+        ...restaurantStatus,
+        blockedTimeSlots: updatedBlockedSlots,
+      }
+
+      await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
+      setRestaurantStatus(updatedStatus)
+      setBlockedTimeSlots(updatedBlockedSlots)
+      alert(`Time slot ${time} on ${date} has been blocked.`)
+    } catch (error) {
+      console.error("Error blocking time slot:", error instanceof Error ? error.message : "Unknown error")
+      alert("Failed to block time slot")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const unblockTimeSlot = async (date: string, time: string) => {
+    if (!window.confirm("Are you sure you want to unblock this time slot?")) return
+
+    setIsUpdating(true)
+    try {
+      const updatedBlockedSlots = (restaurantStatus.blockedTimeSlots || []).filter(
+        (slot) => !(slot.date === date && slot.time === time),
+      )
+
+      const updatedStatus = {
+        ...restaurantStatus,
+        blockedTimeSlots: updatedBlockedSlots,
+      }
+
+      await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
+      setRestaurantStatus(updatedStatus)
+      setBlockedTimeSlots(updatedBlockedSlots)
+      alert(`Time slot ${time} on ${date} has been unblocked.`)
+    } catch (error) {
+      console.error("Error unblocking time slot:", error instanceof Error ? error.message : "Unknown error")
+      alert("Failed to unblock time slot")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const updateAdminLastLogin = async () => {
+    try {
+      // In a real app, you'd get the actual user ID from authentication
+      const userId = "admin"
+      const adminSessionRef = doc(db, "adminSessions", userId)
+
+      // Update the last login time
+      await setDoc(adminSessionRef, {
+        lastLogin: Timestamp.now(),
+        userId,
+      })
+
+      console.log("Admin session updated")
+    } catch (error) {
+      console.error("Error updating admin session:", error)
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Get admin's last login time
+        let lastLoginTime: Timestamp | null = null
+        try {
+          // In a real app, you'd get the actual user ID from authentication
+          const userId = "admin"
+          const adminSessionDoc = await getDoc(doc(db, "adminSessions", userId))
+
+          if (adminSessionDoc.exists()) {
+            const adminSession = adminSessionDoc.data() as AdminSession
+            lastLoginTime = adminSession.lastLogin
+          }
+        } catch (error) {
+          console.error("Error fetching admin session:", error)
+        }
+
+        // Update admin's last login time
+        await updateAdminLastLogin()
+
         const contactsQuery = query(collection(db, "contacts"), orderBy("createdAt", "desc"), limit(5))
         const contactsSnapshot = await getDocs(contactsQuery)
         const contactsList = contactsSnapshot.docs.map((doc) => ({
@@ -186,7 +397,8 @@ const DashboardPage = () => {
         })) as Contact[]
         setContacts(contactsList)
 
-        const reservationsQuery = query(collection(db, "reservations"), orderBy("date", "desc"), limit(5))
+        // Get all reservations ordered by creation date (newest first)
+        const reservationsQuery = query(collection(db, "reservations"), orderBy("createdAt", "desc"), limit(5))
         const reservationsSnapshot = await getDocs(reservationsQuery)
         const reservationsList = reservationsSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -194,10 +406,40 @@ const DashboardPage = () => {
         })) as Reservation[]
         setReservations(reservationsList)
 
+        // Get new reservations since last login
+        if (lastLoginTime) {
+          const newReservationsQuery = query(
+            collection(db, "reservations"),
+            where("createdAt", ">", lastLoginTime.toDate().toISOString()),
+            orderBy("createdAt", "desc"),
+          )
+
+          const newReservationsSnapshot = await getDocs(newReservationsQuery)
+          const newReservationsList = newReservationsSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as Reservation[]
+
+          if (newReservationsList.length > 0) {
+            setNewReservations(newReservationsList)
+
+            // Only show popup if it hasn't been shown in this session
+            const popupShownThisSession = sessionStorage.getItem("reservationPopupShown")
+            if (popupShownThisSession !== "true") {
+              setShowNewReservationsPopup(true)
+              // Mark popup as shown for this session
+              sessionStorage.setItem("reservationPopupShown", "true")
+            }
+          }
+        }
+
         const statusDoc = await getDoc(doc(db, "settings", "restaurantStatus"))
         if (statusDoc.exists()) {
-          setRestaurantStatus(statusDoc.data() as RestaurantStatus)
+          const statusData = statusDoc.data() as RestaurantStatus
+          setRestaurantStatus(statusData)
+          setBlockedTimeSlots(statusData.blockedTimeSlots || [])
         }
+
         // Check if today is Wednesday and automatically close reservations if it is
         const today = new Date()
         const isWednesday = today.getDay() === 3 // Wednesday is day 3 (0 = Sunday)
@@ -205,6 +447,7 @@ const DashboardPage = () => {
           const updatedStatus = {
             isOpen: false,
             lastUpdated: today.toISOString(),
+            blockedTimeSlots: restaurantStatus.blockedTimeSlots || [],
           }
 
           // Update in Firestore
@@ -245,7 +488,6 @@ const DashboardPage = () => {
           .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
           .slice(0, 4)
           .map(([date, count]) => ({ date, count: count as number }))
-        setUpcomingReservations(sortedDates)
       } catch (error) {
         console.error("Error fetching data:", error instanceof Error ? error.message : "Unknown error")
       } finally {
@@ -382,6 +624,13 @@ const DashboardPage = () => {
       handleStatusChange(reservation.id, "pending")
     }
     setSelectedReservation(reservation)
+  }
+
+  const navigateToReservation = (reservationId: string) => {
+    // Store the ID in sessionStorage to highlight it on the reservations page
+    sessionStorage.setItem("highlightedReservationId", reservationId)
+    // Navigate to reservations page
+    window.location.href = "/admin/reservations"
   }
 
   const statsCards = [
@@ -582,6 +831,67 @@ const DashboardPage = () => {
     )
   }
 
+  const NewReservationsPopup = () => {
+    if (!showNewReservationsPopup || newReservations.length === 0) return null
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center animate-in fade-in duration-200">
+        <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 shadow-2xl animate-in slide-in-from-bottom-10 duration-300">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center">
+              <CalendarDays className="h-5 w-5 mr-2 text-blue-500" />
+              New Reservations
+            </h3>
+            <button
+              onClick={() => setShowNewReservationsPopup(false)}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
+          <div className="mt-2 space-y-2">
+            {newReservations.map((reservation) => (
+              <div
+                key={reservation.id}
+                className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center cursor-pointer hover:bg-blue-100 transition-colors"
+                onClick={() => navigateToReservation(reservation.id)}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">{reservation.name}</span>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <CalendarDays className="h-3.5 w-3.5 mr-1" />
+                    {new Date(reservation.date).toLocaleDateString()} at {reservation.time}
+                  </div>
+                </div>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    reservation.status === "approved"
+                      ? "bg-green-100 text-green-800"
+                      : reservation.status === "cancelled"
+                        ? "bg-red-100 text-red-800"
+                        : reservation.status === "unread"
+                          ? "bg-blue-100 text-blue-800 font-bold"
+                          : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {reservation.status}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6">
+            <button
+              onClick={() => setShowNewReservationsPopup(false)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return <div className="p-6">Loading dashboard data...</div>
   }
@@ -616,17 +926,61 @@ const DashboardPage = () => {
               <p className="text-sm text-gray-600">Click the button to change the restaurant's status</p>
             </div>
           </div>
-          <button
-            onClick={toggleRestaurantStatus}
-            disabled={isUpdating}
-            className={`${
-              restaurantStatus.isOpen ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
-            } text-white py-2 px-4 rounded-lg transition-colors duration-200 min-w-32`}
-          >
-            {isUpdating ? "Updating..." : restaurantStatus.isOpen ? "Mark as Closed" : "Mark as Open"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowBlockTimeSlotModal(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-white py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              <Clock className="h-5 w-5 inline mr-1" />
+              Block Time Slot
+            </button>
+            <button
+              onClick={toggleRestaurantStatus}
+              disabled={isUpdating}
+              className={`${
+                restaurantStatus.isOpen ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+              } text-white py-2 px-4 rounded-lg transition-colors duration-200 min-w-32`}
+            >
+              {isUpdating ? "Updating..." : restaurantStatus.isOpen ? "Mark as Closed" : "Mark as Open"}
+            </button>
+          </div>
         </div>
       </div>
+
+      {blockedTimeSlots && blockedTimeSlots.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center mb-4">
+            <Ban className="h-5 w-5 text-red-500 mr-2" />
+            <h2 className="text-lg font-semibold text-gray-900">Blocked Time Slots</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {blockedTimeSlots.map((slot, index) => (
+              <div key={index} className="bg-red-50 p-3 rounded-lg border border-red-100">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center">
+                      <CalendarDays className="h-4 w-4 text-red-500 mr-1" />
+                      <span className="font-medium">{new Date(slot.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <Clock className="h-4 w-4 text-red-500 mr-1" />
+                      <span>{slot.time}</span>
+                    </div>
+                    {slot.reason && <p className="text-sm text-gray-600 mt-1">Reason: {slot.reason}</p>}
+                  </div>
+                  <button
+                    onClick={() => unblockTimeSlot(slot.date, slot.time)}
+                    className="text-red-500 hover:text-red-700 p-1 hover:bg-red-100 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center mb-4">
           <ChefHat className="h-6 w-6 text-amber-500 mr-2" />
@@ -908,6 +1262,7 @@ const DashboardPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Persons</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -953,6 +1308,12 @@ const DashboardPage = () => {
                       {reservation.status}
                     </span>
                   </td>
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    onClick={() => viewReservationDetails(reservation)}
+                  >
+                    {reservation.createdAt ? new Date(reservation.createdAt).toLocaleString() : "N/A"}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => viewReservationDetails(reservation)}
@@ -987,6 +1348,9 @@ const DashboardPage = () => {
                         <span className="mx-1.5">•</span>
                         {reservation.time}
                       </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Created: {reservation.createdAt ? new Date(reservation.createdAt).toLocaleString() : "N/A"}
+                      </div>
                     </div>
                     <span
                       className={`px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -995,7 +1359,7 @@ const DashboardPage = () => {
                           : reservation.status === "cancelled"
                             ? "bg-red-100 text-red-800"
                             : reservation.status === "unread"
-                              ? "bg-blue-100 text-blue-800"
+                              ? "bg-blue-100 text-blue-800 font-bold"
                               : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
@@ -1058,48 +1422,13 @@ const DashboardPage = () => {
       )}
 
       {selectedReservation && <ReservationDetailModal />}
-
-      {upcomingReservations.length > 0 && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 shadow-2xl animate-in slide-in-from-bottom-10 duration-300">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                <CalendarDays className="h-5 w-5 mr-2 text-blue-500" />
-                Upcoming Reservations
-              </h3>
-              <button
-                onClick={() => setUpcomingReservations([])}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="h-5 w-5 text-gray-500" />
-              </button>
-            </div>
-            <div className="mt-2 space-y-2">
-              {upcomingReservations.map((reservation) => (
-                <div
-                  key={reservation.date}
-                  className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center"
-                >
-                  <div className="flex items-center">
-                    <CalendarDays className="h-4 w-4 text-blue-500 mr-2" />
-                    <span className="font-medium">{reservation.date}</span>
-                  </div>
-                  <div className="bg-white px-3 py-1 rounded-full text-sm font-medium text-blue-600">
-                    {reservation.count} {reservation.count === 1 ? "reservation" : "reservations"}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6">
-              <button
-                onClick={() => setUpcomingReservations([])}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+      {showNewReservationsPopup && <NewReservationsPopup />}
+      {showBlockTimeSlotModal && (
+        <BlockTimeSlotModal
+          isOpen={showBlockTimeSlotModal}
+          onClose={() => setShowBlockTimeSlotModal(false)}
+          onBlock={blockTimeSlot}
+        />
       )}
     </div>
   )

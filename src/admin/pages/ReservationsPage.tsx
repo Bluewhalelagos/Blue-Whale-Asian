@@ -37,10 +37,11 @@ const ReservationsPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]) // Default sort by creation date
   const [globalFilter, setGlobalFilter] = useState("")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [highlightedReservationId, setHighlightedReservationId] = useState<string | null>(null)
 
   const fetchReservations = async (date?: Date) => {
     setIsLoading(true)
@@ -58,9 +59,11 @@ const ReservationsPage = () => {
           where("date", ">=", `${dateString}T00:00:00.000Z`),
           where("date", "<=", `${dateString}T23:59:59.999Z`),
           orderBy("date", "asc"),
+          orderBy("createdAt", "desc"), // Secondary sort by creation date
         )
       } else {
-        reservationsQuery = query(collection(db, "reservations"), orderBy("date", "desc"))
+        // If no date filter, sort by creation date (newest first)
+        reservationsQuery = query(collection(db, "reservations"), orderBy("createdAt", "desc"))
       }
 
       const snapshot = await getDocs(reservationsQuery)
@@ -82,6 +85,22 @@ const ReservationsPage = () => {
   useEffect(() => {
     fetchReservations(selectedDate || undefined)
   }, [selectedDate])
+
+  // Check for highlighted reservation from dashboard
+  useEffect(() => {
+    const highlightedId = sessionStorage.getItem("highlightedReservationId")
+    if (highlightedId) {
+      setHighlightedReservationId(highlightedId)
+      // Clear from session storage after retrieving
+      sessionStorage.removeItem("highlightedReservationId")
+
+      // Find and show details for the highlighted reservation
+      const reservation = reservations.find((r) => r.id === highlightedId)
+      if (reservation) {
+        viewReservationDetails(reservation)
+      }
+    }
+  }, [reservations])
 
   const handleStatusChange = async (id: string, newStatus: "approved" | "cancelled" | "pending") => {
     try {
@@ -188,6 +207,16 @@ const ReservationsPage = () => {
           {info.getValue()}
         </span>
       ),
+    }),
+    columnHelper.accessor("createdAt", {
+      header: "Created",
+      cell: (info) => {
+        try {
+          return new Date(info.getValue() || "").toLocaleString()
+        } catch (e) {
+          return "N/A"
+        }
+      },
     }),
     columnHelper.display({
       id: "actions",
@@ -427,9 +456,16 @@ const ReservationsPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
+                  <tr
+                    key={row.id}
+                    className={`hover:bg-gray-50 ${highlightedReservationId === row.original.id ? "bg-amber-100" : ""}`}
+                  >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                      <td
+                        key={cell.id}
+                        className="px-6 py-4 whitespace-nowrap"
+                        onClick={() => viewReservationDetails(row.original)}
+                      >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
@@ -446,12 +482,21 @@ const ReservationsPage = () => {
         {!isLoading && reservations.length > 0 && (
           <div className="space-y-4 mt-4">
             {reservations.map((reservation) => (
-              <div key={reservation.id} className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+              <div
+                key={reservation.id}
+                className={`bg-white rounded-lg shadow p-4 border-l-4 ${
+                  highlightedReservationId === reservation.id ? "border-amber-500 bg-amber-50" : "border-blue-500"
+                }`}
+                onClick={() => viewReservationDetails(reservation)}
+              >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium">{reservation.name}</h3>
                     <p className="text-sm text-gray-500">
                       {new Date(reservation.date).toLocaleDateString()} at {reservation.time}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Created: {reservation.createdAt ? new Date(reservation.createdAt).toLocaleString() : "N/A"}
                     </p>
                   </div>
                   <span
@@ -476,7 +521,10 @@ const ReservationsPage = () => {
                   <div className="flex space-x-2">
                     <button
                       className="p-1 hover:bg-blue-100 rounded"
-                      onClick={() => viewReservationDetails(reservation)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        viewReservationDetails(reservation)
+                      }}
                     >
                       <Eye className="h-5 w-5 text-blue-600" />
                     </button>
@@ -484,13 +532,19 @@ const ReservationsPage = () => {
                       <>
                         <button
                           className="p-1 hover:bg-green-100 rounded"
-                          onClick={() => handleStatusChange(reservation.id, "approved")}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleStatusChange(reservation.id, "approved")
+                          }}
                         >
                           <Check className="h-5 w-5 text-green-600" />
                         </button>
                         <button
                           className="p-1 hover:bg-red-100 rounded"
-                          onClick={() => handleStatusChange(reservation.id, "cancelled")}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleStatusChange(reservation.id, "cancelled")
+                          }}
                         >
                           <X className="h-5 w-5 text-red-600" />
                         </button>
