@@ -480,12 +480,13 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     <Calendar className="h-5 w-5 text-amber-400" />
                   </div>
                   <DatePicker
-                    selected={formData.date}
-                    onChange={(date) => setFormData({ ...formData, date: date || new Date() })}
-                    minDate={new Date()}
-                    className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
-                    disabled={isSubmitting}
-                  />
+                  selected={formData.date}
+                  onChange={(date) => setFormData({ ...formData, date: date || new Date() })}
+                  minDate={new Date()}
+                  filterDate={(date) => date.getDay() !== 3}
+                  className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
+                  disabled={isSubmitting}
+                />
                   {errors.date && <p className="text-amber-500 text-sm mt-1">{errors.date}</p>}
                 </div>
 

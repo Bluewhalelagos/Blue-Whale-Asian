@@ -79,6 +79,11 @@ interface Offer {
   showOnLoad: boolean
 }
 
+interface UpcomingReservationCount {
+  date: string
+  count: number
+}
+
 const DashboardPage = () => {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
@@ -113,7 +118,7 @@ const DashboardPage = () => {
     isActive: true,
     showOnLoad: true,
   })
-  const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([])
+  const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservationCount[]>([])
 
   const addNewTodaysSpecial = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -132,7 +137,7 @@ const DashboardPage = () => {
         isActive: false,
       })
     } catch (error) {
-      console.error("Error adding today's special:", error)
+      console.error("Error adding today's special:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to add Today's Special")
     } finally {
       setIsUpdating(false)
@@ -147,7 +152,7 @@ const DashboardPage = () => {
       setTodaysSpecial(todaysSpecial.filter((special) => special.id !== id))
       alert("Special removed successfully!")
     } catch (error) {
-      console.error("Error removing special:", error)
+      console.error("Error removing special:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to remove special")
     } finally {
       setIsUpdating(false)
@@ -163,7 +168,7 @@ const DashboardPage = () => {
       await updateDoc(doc(db, "specials", id), updatedSpecial)
       setTodaysSpecial(todaysSpecial.map((s) => (s.id === id ? updatedSpecial : s)))
     } catch (error) {
-      console.error("Error updating special status:", error)
+      console.error("Error updating special status:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to update special status")
     } finally {
       setIsUpdating(false)
@@ -192,6 +197,22 @@ const DashboardPage = () => {
         const statusDoc = await getDoc(doc(db, "settings", "restaurantStatus"))
         if (statusDoc.exists()) {
           setRestaurantStatus(statusDoc.data() as RestaurantStatus)
+        }
+        // Check if today is Wednesday and automatically close reservations if it is
+        const today = new Date()
+        const isWednesday = today.getDay() === 3 // Wednesday is day 3 (0 = Sunday)
+        if (isWednesday) {
+          const updatedStatus = {
+            isOpen: false,
+            lastUpdated: today.toISOString(),
+          }
+
+          // Update in Firestore
+          await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
+
+          // Update local state
+          setRestaurantStatus(updatedStatus)
+          console.log("Today is Wednesday - Restaurant automatically closed for reservations")
         }
 
         const specialsSnapshot = await getDocs(collection(db, "specials"))
@@ -223,10 +244,10 @@ const DashboardPage = () => {
         const sortedDates = Object.entries(upcomingDates)
           .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
           .slice(0, 4)
-          .map(([date, count]) => ({ date, count }))
+          .map(([date, count]) => ({ date, count: count as number }))
         setUpcomingReservations(sortedDates)
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching data:", error instanceof Error ? error.message : "Unknown error")
       } finally {
         setIsLoading(false)
       }
@@ -237,15 +258,25 @@ const DashboardPage = () => {
   const toggleRestaurantStatus = async () => {
     setIsUpdating(true)
     try {
+      const today = new Date()
+      const isWednesday = today.getDay() === 3 // Wednesday is day 3 (0 = Sunday)
+
+      // If it's Wednesday, show an alert and don't allow opening
+      if (isWednesday && !restaurantStatus.isOpen) {
+        alert("The restaurant is closed for reservations every Wednesday.")
+        setIsUpdating(false)
+        return
+      }
+
       const updatedStatus = {
         ...restaurantStatus,
-        isOpen: !restaurantStatus.isOpen,
-        lastUpdated: new Date().toISOString(),
+        isOpen: isWednesday ? false : !restaurantStatus.isOpen,
+        lastUpdated: today.toISOString(),
       }
       await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
       setRestaurantStatus(updatedStatus)
     } catch (error) {
-      console.error("Error updating restaurant status:", error)
+      console.error("Error updating restaurant status:", error instanceof Error ? error.message : "Unknown error")
     } finally {
       setIsUpdating(false)
     }
@@ -269,7 +300,7 @@ const DashboardPage = () => {
       })
       alert("New offer added successfully!")
     } catch (error) {
-      console.error("Error adding new offer:", error)
+      console.error("Error adding new offer:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to add new offer")
     } finally {
       setIsUpdating(false)
@@ -284,7 +315,7 @@ const DashboardPage = () => {
       setOffers(offers.filter((offer) => offer.id !== id))
       alert("Offer removed successfully!")
     } catch (error) {
-      console.error("Error removing offer:", error)
+      console.error("Error removing offer:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to remove offer")
     } finally {
       setIsUpdating(false)
@@ -299,7 +330,7 @@ const DashboardPage = () => {
       await updateDoc(doc(db, "offers", offerId), updatedOffer)
       setOffers(offers.map((o) => (o.id === offerId ? updatedOffer : o)))
     } catch (error) {
-      console.error("Error toggling offer status:", error)
+      console.error("Error toggling offer status:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to update offer status")
     }
   }
@@ -312,7 +343,7 @@ const DashboardPage = () => {
       await updateDoc(doc(db, "offers", offerId), updatedOffer)
       setOffers(offers.map((o) => (o.id === offerId ? updatedOffer : o)))
     } catch (error) {
-      console.error("Error toggling offer show on load:", error)
+      console.error("Error toggling offer show on load:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to update offer display settings")
     }
   }
@@ -340,8 +371,8 @@ const DashboardPage = () => {
 
       console.log(`Reservation ${id} updated to ${newStatus}`)
     } catch (error) {
-      console.error("Error updating reservation status:", error)
-      alert(`Update failed: ${error.message}`)
+      console.error("Error updating reservation status:", error instanceof Error ? error.message : "Unknown error")
+      alert(`Update failed: ${error instanceof Error ? error.message : "Unknown error"}`)
     }
   }
 
