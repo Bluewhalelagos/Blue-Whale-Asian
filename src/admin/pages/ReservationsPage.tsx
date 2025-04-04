@@ -252,7 +252,11 @@ const ReservationsPage = () => {
       ),
     }),
   ]
-
+  const isNotWednesday = (date: Date) => {
+    
+    const day = date.getDay();
+    return day !== 3; 
+  };
   const table = useReactTable({
     data: reservations,
     columns,
@@ -414,12 +418,13 @@ const ReservationsPage = () => {
             className="px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto"
           />
           <DatePicker
-            selected={selectedDate}
-            onChange={(date) => setSelectedDate(date)}
-            className="px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto"
-            placeholderText="Filter by date"
-            dateFormat="yyyy-MM-dd"
-          />
+      selected={selectedDate}
+      onChange={(date) => setSelectedDate(date)}
+      className="px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto"
+      placeholderText="Filter by date"
+      dateFormat="yyyy-MM-dd"
+      filterDate={isNotWednesday} 
+    />
         </div>
       </div>
 
