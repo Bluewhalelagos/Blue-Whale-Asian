@@ -13,7 +13,7 @@ import {
 } from "@tanstack/react-table"
 import { Check, X, ChevronUp, ChevronDown, Eye } from "lucide-react"
 import { db } from "../../firebase/config"
-import { collection, query, orderBy, getDocs, doc, updateDoc, where } from "firebase/firestore"
+import { collection, query, orderBy, getDocs, doc, updateDoc, where, Timestamp } from "firebase/firestore"
 
 interface Reservation {
   id: string
@@ -51,15 +51,15 @@ const ReservationsPage = () => {
       if (date) {
         // Format date as YYYY-MM-DD for string comparison
         const dateString = date.toISOString().split("T")[0]
-
+        
+        // FIXED APPROACH: Use a single where clause for the date field
+        // This avoids the need for a composite index
         reservationsQuery = query(
           collection(db, "reservations"),
-          // Assuming date is stored as an ISO string in Firestore
-          // This will get all reservations for the selected day
-          where("date", ">=", `${dateString}T00:00:00.000Z`),
-          where("date", "<=", `${dateString}T23:59:59.999Z`),
-          orderBy("date", "asc"),
-          orderBy("createdAt", "desc"), // Secondary sort by creation date
+          where("date", ">=", `${dateString}`),
+          where("date", "<", `${dateString.split('T')[0]}T23:59:59.999Z`),
+          orderBy("date", "asc")
+          // Remove the second orderBy for now to simplify the query
         )
       } else {
         // If no date filter, sort by creation date (newest first)
@@ -77,6 +77,10 @@ const ReservationsPage = () => {
       console.log("Fetched reservations:", reservationsList)
     } catch (error) {
       console.error("Error fetching reservations:", error)
+      // Show a more specific error message to help with debugging
+      if (error.code === 'failed-precondition') {
+        console.error("This query requires an index. Follow the link in the Firebase console to create it:", error.message)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -569,4 +573,3 @@ const ReservationsPage = () => {
 }
 
 export default ReservationsPage
-
