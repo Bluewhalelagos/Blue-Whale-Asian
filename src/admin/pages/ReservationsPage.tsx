@@ -37,7 +37,7 @@ const ReservationsPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]) // Default sort by creation date
+  const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }])
   const [globalFilter, setGlobalFilter] = useState("")
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -50,16 +50,23 @@ const ReservationsPage = () => {
 
       if (date) {
         // Format date as YYYY-MM-DD for string comparison
-        const dateString = date.toISOString().split("T")[0]
+        // Make sure we use local timezone to prevent day offset issues
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const dateString = `${year}-${month}-${day}`
         
-        // FIXED APPROACH: Use a single where clause for the date field
-        // This avoids the need for a composite index
+        // Create date range for the entire selected day
+        const startOfDay = `${dateString}T00:00:00.000Z`
+        const endOfDay = `${dateString}T23:59:59.999Z`
+        
+        console.log(`Fetching reservations for date range: ${startOfDay} to ${endOfDay}`)
+        
         reservationsQuery = query(
           collection(db, "reservations"),
-          where("date", ">=", `${dateString}`),
-          where("date", "<", `${dateString.split('T')[0]}T23:59:59.999Z`),
+          where("date", ">=", startOfDay),
+          where("date", "<=", endOfDay),
           orderBy("date", "asc")
-          // Remove the second orderBy for now to simplify the query
         )
       } else {
         // If no date filter, sort by creation date (newest first)
@@ -256,11 +263,25 @@ const ReservationsPage = () => {
       ),
     }),
   ]
+  
+  // Function to check if a date is Wednesday (day 3)
   const isNotWednesday = (date: Date) => {
-    
     const day = date.getDay();
-    return day !== 3; 
+    return day !== 3; // 3 is Wednesday in JavaScript's getDay() (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
   };
+  
+  // Function to validate the selected date is not a Wednesday
+  const handleDateChange = (date: Date | null) => {
+    if (date) {
+      const day = date.getDay();
+      if (day === 3) { // Wednesday
+        alert("Reservations are not available on Wednesdays");
+        return;
+      }
+    }
+    setSelectedDate(date);
+  };
+  
   const table = useReactTable({
     data: reservations,
     columns,
@@ -422,13 +443,23 @@ const ReservationsPage = () => {
             className="px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto"
           />
           <DatePicker
-      selected={selectedDate}
-      onChange={(date) => setSelectedDate(date)}
-      className="px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto"
-      placeholderText="Filter by date"
-      dateFormat="yyyy-MM-dd"
-      filterDate={isNotWednesday} 
-    />
+            selected={selectedDate}
+            onChange={handleDateChange}
+            className="px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto"
+            placeholderText="Filter by date"
+            dateFormat="yyyy-MM-dd"
+            filterDate={isNotWednesday}
+            highlightDates={[
+              {
+                dates: Array.from({ length: 52 }, (_, i) => {
+                  const date = new Date();
+                  date.setDate(date.getDate() + (3 + 7 * i - date.getDay()) % 7);
+                  return date;
+                }),
+                className: 'text-red-500 line-through bg-red-100'
+              }
+            ]}
+          />
         </div>
       </div>
 
