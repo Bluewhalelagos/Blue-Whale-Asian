@@ -56,6 +56,10 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
     {
       img: "https://i.postimg.cc/SNv7Zg6z/image6.jpg",
       alt: "Special Curry"
+    },
+    {
+      img: "https://i.postimg.cc/c4WjCtY5/Gallery.jpg",
+      alt: "Our Lovely Guest"
     }
   ];
 
