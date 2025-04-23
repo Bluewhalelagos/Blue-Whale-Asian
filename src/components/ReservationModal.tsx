@@ -48,14 +48,6 @@ const translations: Record<string, any> = {
       date: "Date Night",
       other: "Other",
     },
-    seatingPreference: "Seating Preference",
-    seating: {
-      noPreference: "No Preference",
-      indoor: "Indoor",
-      outdoor: "Outdoor",
-      window: "Window",
-      private: "Private (if available)",
-    },
     requests: "Any special requests or dietary requirements?",
     bookButton: "Book a Table",
     submitting: "Submitting...",
@@ -110,14 +102,6 @@ const translations: Record<string, any> = {
       date: "Jantar Romântico",
       other: "Outro",
     },
-    seatingPreference: "Preferência de Assento",
-    seating: {
-      noPreference: "Sem Preferência",
-      indoor: "Interior",
-      outdoor: "Exterior",
-      window: "Janela",
-      private: "Privado (se disponível)",
-    },
     requests: "Algum pedido especial ou requisito dietético?",
     bookButton: "Reservar uma Mesa",
     submitting: "A submeter...",
@@ -169,7 +153,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     persons: "2",
     specialRequests: "",
     occasion: "",
-    preferredSeating: "no preference",
   })
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
@@ -643,21 +626,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                 </div>
 
                 <div>
-                  <select
-                    value={formData.preferredSeating}
-                    onChange={(e) => setFormData({ ...formData, preferredSeating: e.target.value })}
-                    className="w-full px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
-                    disabled={isSubmitting}
-                  >
-                    <option value="no preference">{text.seating.noPreference}</option>
-                    <option value="indoor">{text.seating.indoor}</option>
-                    <option value="outdoor">{text.seating.outdoor}</option>
-                    <option value="window">{text.seating.window}</option>
-                    <option value="private">{text.seating.private}</option>
-                  </select>
-                </div>
-
-                <div>
                   <textarea
                     placeholder={text.requests}
                     value={formData.specialRequests}
@@ -685,4 +653,3 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
 }
 
 export default ReservationModal
-
