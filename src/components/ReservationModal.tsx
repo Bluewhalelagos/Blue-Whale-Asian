@@ -163,7 +163,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
   const [isLoading, setIsLoading] = useState(true)
   const [restaurantStatus, setRestaurantStatus] = useState<RestaurantStatus>({
     isOpen: true,
-    closedDays: ["Wednesday"],
+    closedDays: [],
     openingTime: "17:00",
     closingTime: "22:00",
     specialClosures: [],
@@ -559,7 +559,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     selected={formData.date}
                     onChange={handleDateChange}
                     minDate={new Date()}
-                    filterDate={(date) => date.getDay() !== 3} // Filter out Wednesdays
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
                     disabled={isSubmitting}
                   />

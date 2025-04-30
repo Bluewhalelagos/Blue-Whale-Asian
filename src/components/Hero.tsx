@@ -12,20 +12,21 @@ interface HeroProps {
 // Define translations for the Hero component
 const translations = {
   en: {
-    subheading: "Blue Whale Lagos is open for dine-in and take away from Thursday to Tuesday with dinner service available from 5:00 PM to 10:00 PM.",
+    subheading: "Blue Whale Lagos is open for dine-in and take away every day from 5:00 PM to 10:00 PM.",
     heading: "Embark on a culinary journey through the finest Asian cuisines, expertly crafted and beautifully presented.",
     buttonText: "Book Your Table",
     reservationsOpen: "Reservations Open",
     reservationsClosed: "Reservations Closed"
   },
   pt: {
-    subheading: "O Blue Whale Lagos está aberto para refeições no local e para levar de quinta a terça-feira, com serviço de jantar disponível das 17h00 às 22h00.",
+    subheading: "O Blue Whale Lagos está aberto para refeições no local e para levar todos os dias das 17h00 às 22h00.",
     heading: "Embarque numa jornada culinária pelas melhores cozinhas asiáticas, habilmente elaboradas e lindamente apresentadas.",
     buttonText: "Reserve Sua Mesa",
     reservationsOpen: "Reservas Abertas",
     reservationsClosed: "Reservas Fechadas"
   }
 };
+
 
 const Hero: React.FC<HeroProps> = ({ onBookTable, language, isReservationsOpen = true }) => {
   const [showClosedModal, setShowClosedModal] = useState(false);
