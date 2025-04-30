@@ -441,22 +441,22 @@ const DashboardPage = () => {
         }
 
         // Check if today is Wednesday and automatically close reservations if it is
-        const today = new Date()
-        const isWednesday = today.getDay() === 3 // Wednesday is day 3 (0 = Sunday)
-        if (isWednesday) {
-          const updatedStatus = {
-            isOpen: false,
-            lastUpdated: today.toISOString(),
-            blockedTimeSlots: restaurantStatus.blockedTimeSlots || [],
-          }
+        // const today = new Date()
+        // const isWednesday = today.getDay() === 3 // Wednesday is day 3 (0 = Sunday)
+        // if (isWednesday) {
+        //   const updatedStatus = {
+        //     isOpen: false,
+        //     lastUpdated: today.toISOString(),
+        //     blockedTimeSlots: restaurantStatus.blockedTimeSlots || [],
+        //   }
 
-          // Update in Firestore
-          await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
+        //   // Update in Firestore
+        //   await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
 
-          // Update local state
-          setRestaurantStatus(updatedStatus)
-          console.log("Today is Wednesday - Restaurant automatically closed for reservations")
-        }
+        //   // Update local state
+        //   setRestaurantStatus(updatedStatus)
+        //   console.log("Today is Wednesday - Restaurant automatically closed for reservations")
+        // }
 
         const specialsSnapshot = await getDocs(collection(db, "specials"))
         const specialsList = specialsSnapshot.docs.map((doc) => ({
