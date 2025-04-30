@@ -497,23 +497,25 @@ const DashboardPage = () => {
     fetchData()
   }, [])
 
-  const toggleRestaurantStatus = async () => {
+    const toggleRestaurantStatus = async () => {
     setIsUpdating(true)
     try {
-      const today = new Date()
-      const isWednesday = today.getDay() === 3 // Wednesday is day 3 (0 = Sunday)
+      // Removed Wednesday block to allow opening on Wednesdays
+      // const today = new Date()
+      // const isWednesday = today.getDay() === 3 // Wednesday is day 3 (0 = Sunday)
 
-      // If it's Wednesday, show an alert and don't allow opening
-      if (isWednesday && !restaurantStatus.isOpen) {
-        alert("The restaurant is closed for reservations every Wednesday.")
-        setIsUpdating(false)
-        return
-      }
+      // // If it's Wednesday, show an alert and don't allow opening
+      // if (isWednesday && !restaurantStatus.isOpen) {
+      //   alert("The restaurant is closed for reservations every Wednesday.")
+      //   setIsUpdating(false)
+      //   return
+      // }
 
       const updatedStatus = {
         ...restaurantStatus,
-        isOpen: isWednesday ? false : !restaurantStatus.isOpen,
-        lastUpdated: today.toISOString(),
+        // isOpen: isWednesday ? false : !restaurantStatus.isOpen,
+        isOpen: !restaurantStatus.isOpen,
+        lastUpdated: new Date().toISOString(),
       }
       await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
       setRestaurantStatus(updatedStatus)

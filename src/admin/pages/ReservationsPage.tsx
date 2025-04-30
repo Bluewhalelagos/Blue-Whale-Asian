@@ -263,25 +263,11 @@ const ReservationsPage = () => {
       ),
     }),
   ]
-  
-  // Function to check if a date is Wednesday (day 3)
-  const isNotWednesday = (date: Date) => {
-    const day = date.getDay();
-    return day !== 3; // 3 is Wednesday in JavaScript's getDay() (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-  };
-  
-  // Function to validate the selected date is not a Wednesday
+
   const handleDateChange = (date: Date | null) => {
-    if (date) {
-      const day = date.getDay();
-      if (day === 3) { // Wednesday
-        alert("Reservations are not available on Wednesdays");
-        return;
-      }
-    }
     setSelectedDate(date);
-  };
-  
+  }
+
   const table = useReactTable({
     data: reservations,
     columns,
@@ -448,17 +434,6 @@ const ReservationsPage = () => {
             className="px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 w-full md:w-auto"
             placeholderText="Filter by date"
             dateFormat="yyyy-MM-dd"
-            filterDate={isNotWednesday}
-            highlightDates={[
-              {
-                dates: Array.from({ length: 52 }, (_, i) => {
-                  const date = new Date();
-                  date.setDate(date.getDate() + (3 + 7 * i - date.getDay()) % 7);
-                  return date;
-                }),
-                className: 'text-red-500 line-through bg-red-100'
-              }
-            ]}
           />
         </div>
       </div>
