@@ -64,8 +64,9 @@ interface RestaurantStatus {
   lastUpdated: string
   blockedTimeSlots?: {
     date: string
-    time: string
+    time?: string
     reason?: string
+    isFullDay?: boolean
   }[]
 }
 
@@ -93,21 +94,18 @@ interface Offer {
   showOnLoad: boolean
 }
 
-interface UpcomingReservationCount {
-  date: string
-  count: number
-}
 
 interface BlockTimeSlotModalProps {
   isOpen: boolean
   onClose: () => void
-  onBlock: (date: string, time: string, reason: string) => Promise<void>
+  onBlock: (date: string, time: string, reason: string, isFullDay?: boolean) => Promise<void>
 }
 
 const BlockTimeSlotModal: React.FC<BlockTimeSlotModalProps> = ({ isOpen, onClose, onBlock }) => {
   const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0])
   const [time, setTime] = useState<string>("18:00")
   const [reason, setReason] = useState<string>("")
+  const [isFullDay, setIsFullDay] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
   if (!isOpen) return null
@@ -116,7 +114,7 @@ const BlockTimeSlotModal: React.FC<BlockTimeSlotModalProps> = ({ isOpen, onClose
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      await onBlock(date, time, reason)
+      await onBlock(date, time, reason, isFullDay)
       onClose()
     } catch (error) {
       console.error("Error blocking time slot:", error)
@@ -147,26 +145,41 @@ const BlockTimeSlotModal: React.FC<BlockTimeSlotModalProps> = ({ isOpen, onClose
               required
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Time</label>
-            <select
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
-              required
-            >
-              {Array.from({ length: 24 }, (_, i) => i).map((hour) =>
-                ["00", "15", "30", "45"].map((minute) => {
-                  const timeValue = `${hour.toString().padStart(2, "0")}:${minute}`
-                  return (
-                    <option key={timeValue} value={timeValue}>
-                      {timeValue}
-                    </option>
-                  )
-                }),
-              )}
-            </select>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="fullDayCheckbox"
+              checked={isFullDay}
+              onChange={(e) => setIsFullDay(e.target.checked)}
+              className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+            />
+            <label htmlFor="fullDayCheckbox" className="ml-2 block text-sm text-gray-900">
+              Block entire day
+            </label>
           </div>
+          
+          {!isFullDay && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Time</label>
+              <select
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+                required
+              >
+                {Array.from({ length: 24 }, (_, i) => i).map((hour) =>
+                  ["00", "15", "30", "45"].map((minute) => {
+                    const timeValue = `${hour.toString().padStart(2, "0")}:${minute}`
+                    return (
+                      <option key={timeValue} value={timeValue}>
+                        {timeValue}
+                      </option>
+                    )
+                  }),
+                )}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Reason (optional)</label>
             <textarea
@@ -189,7 +202,7 @@ const BlockTimeSlotModal: React.FC<BlockTimeSlotModalProps> = ({ isOpen, onClose
               disabled={isSubmitting}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
             >
-              {isSubmitting ? "Blocking..." : "Block Time Slot"}
+              {isSubmitting ? "Blocking..." : isFullDay ? "Block Full Day" : "Block Time Slot"}
             </button>
           </div>
         </form>
@@ -301,11 +314,29 @@ const DashboardPage = () => {
     }
   }
 
-  const blockTimeSlot = async (date: string, time: string, reason: string) => {
+  const blockTimeSlot = async (date: string, time: string, reason: string, isFullDay: boolean = false) => {
     setIsUpdating(true)
     try {
-      const newBlockedSlot = { date, time, reason }
-      const updatedBlockedSlots = [...(restaurantStatus.blockedTimeSlots || []), newBlockedSlot]
+      let updatedBlockedSlots;
+      
+      if (isFullDay) {
+        // For full day blocking, create entries for all time slots in the day
+        // or use a special marker to indicate full day blocking
+        const fullDayBlock = { date, isFullDay: true, reason }
+        
+        // Remove any existing individual time slots for this date
+        const filteredSlots = (restaurantStatus.blockedTimeSlots || []).filter(
+          (slot) => slot.date !== date
+        )
+        
+        updatedBlockedSlots = [...filteredSlots, fullDayBlock]
+        alert(`All time slots on ${date} have been blocked.`)
+      } else {
+        // Regular single time slot blocking
+        const newBlockedSlot = { date, time, reason }
+        updatedBlockedSlots = [...(restaurantStatus.blockedTimeSlots || []), newBlockedSlot]
+        alert(`Time slot ${time} on ${date} has been blocked.`)
+      }
 
       const updatedStatus = {
         ...restaurantStatus,
@@ -315,7 +346,6 @@ const DashboardPage = () => {
       await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
       setRestaurantStatus(updatedStatus)
       setBlockedTimeSlots(updatedBlockedSlots)
-      alert(`Time slot ${time} on ${date} has been blocked.`)
     } catch (error) {
       console.error("Error blocking time slot:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to block time slot")
@@ -324,14 +354,26 @@ const DashboardPage = () => {
     }
   }
 
-  const unblockTimeSlot = async (date: string, time: string) => {
+  const unblockTimeSlot = async (date: string, time?: string) => {
     if (!window.confirm("Are you sure you want to unblock this time slot?")) return
 
     setIsUpdating(true)
     try {
-      const updatedBlockedSlots = (restaurantStatus.blockedTimeSlots || []).filter(
-        (slot) => !(slot.date === date && slot.time === time),
-      )
+      let updatedBlockedSlots;
+      
+      if (!time) {
+        // Unblocking a full day
+        updatedBlockedSlots = (restaurantStatus.blockedTimeSlots || []).filter(
+          (slot) => slot.date !== date
+        )
+        alert(`All time slots on ${date} have been unblocked.`)
+      } else {
+        // Unblocking a specific time slot
+        updatedBlockedSlots = (restaurantStatus.blockedTimeSlots || []).filter(
+          (slot) => !(slot.date === date && slot.time === time)
+        )
+        alert(`Time slot ${time} on ${date} has been unblocked.`)
+      }
 
       const updatedStatus = {
         ...restaurantStatus,
@@ -341,7 +383,6 @@ const DashboardPage = () => {
       await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
       setRestaurantStatus(updatedStatus)
       setBlockedTimeSlots(updatedBlockedSlots)
-      alert(`Time slot ${time} on ${date} has been unblocked.`)
     } catch (error) {
       console.error("Error unblocking time slot:", error instanceof Error ? error.message : "Unknown error")
       alert("Failed to unblock time slot")
@@ -440,24 +481,6 @@ const DashboardPage = () => {
           setBlockedTimeSlots(statusData.blockedTimeSlots || [])
         }
 
-        // Check if today is Wednesday and automatically close reservations if it is
-        // const today = new Date()
-        // const isWednesday = today.getDay() === 3 // Wednesday is day 3 (0 = Sunday)
-        // if (isWednesday) {
-        //   const updatedStatus = {
-        //     isOpen: false,
-        //     lastUpdated: today.toISOString(),
-        //     blockedTimeSlots: restaurantStatus.blockedTimeSlots || [],
-        //   }
-
-        //   // Update in Firestore
-        //   await updateDoc(doc(db, "settings", "restaurantStatus"), updatedStatus)
-
-        //   // Update local state
-        //   setRestaurantStatus(updatedStatus)
-        //   console.log("Today is Wednesday - Restaurant automatically closed for reservations")
-        // }
-
         const specialsSnapshot = await getDocs(collection(db, "specials"))
         const specialsList = specialsSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -484,10 +507,6 @@ const DashboardPage = () => {
           acc[date] = (acc[date] || 0) + 1
           return acc
         }, {})
-        const sortedDates = Object.entries(upcomingDates)
-          .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-          .slice(0, 4)
-          .map(([date, count]) => ({ date, count: count as number }))
       } catch (error) {
         console.error("Error fetching data:", error instanceof Error ? error.message : "Unknown error")
       } finally {
@@ -579,18 +598,6 @@ const DashboardPage = () => {
     }
   }
 
-  const toggleOfferShowOnLoad = async (offerId: string) => {
-    const offerToUpdate = offers.find((o) => o.id === offerId)
-    if (!offerToUpdate) return
-    try {
-      const updatedOffer = { ...offerToUpdate, showOnLoad: !offerToUpdate.showOnLoad }
-      await updateDoc(doc(db, "offers", offerId), updatedOffer)
-      setOffers(offers.map((o) => (o.id === offerId ? updatedOffer : o)))
-    } catch (error) {
-      console.error("Error toggling offer show on load:", error instanceof Error ? error.message : "Unknown error")
-      alert("Failed to update offer display settings")
-    }
-  }
 
   const handleStatusChange = async (id: string, newStatus: "approved" | "cancelled" | "pending") => {
     try {

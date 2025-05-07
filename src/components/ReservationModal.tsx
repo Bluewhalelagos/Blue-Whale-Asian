@@ -20,8 +20,9 @@ interface RestaurantStatus {
   }[]
   blockedTimeSlots?: {
     date: string
-    time: string
+    time?: string
     reason?: string
+    isFullDay?: boolean
   }[]
 }
 
@@ -51,8 +52,6 @@ const translations: Record<string, any> = {
     requests: "Any special requests or dietary requirements?",
     bookButton: "Book a Table",
     submitting: "Submitting...",
-    closedDay: "WEDNESDAY CLOSED!",
-    closedDayMessage: "Please select another day for your reservation.",
     restaurantClosed: "NOTICE",
     restaurantClosedMessage:
       "The restaurant is currently closed for regular service. You can still make reservations for future dates.",
@@ -105,8 +104,6 @@ const translations: Record<string, any> = {
     requests: "Algum pedido especial ou requisito dietético?",
     bookButton: "Reservar uma Mesa",
     submitting: "A submeter...",
-    closedDay: "QUARTAS-FEIRAS FECHADO!",
-    closedDayMessage: "Por favor, selecione outro dia para sua reserva.",
     restaurantClosed: "AVISO",
     restaurantClosedMessage:
       "O restaurante está atualmente fechado para serviço regular. Você ainda pode fazer reservas para datas futuras.",
@@ -173,6 +170,14 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
   const [isTimeSlotBlocked, setIsTimeSlotBlocked] = useState(false)
   const [blockedTimeSlotReason, setBlockedTimeSlotReason] = useState<string>("")
 
+  const formatLocalDate = (date: Date): string => {
+    // Format date as YYYY-MM-DD in local time zone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   const generateTimeSlots = (selectedDate: Date) => {
     const slots = []
     const opening = restaurantStatus?.openingTime || "17:00"
@@ -188,12 +193,21 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
       closingTimeMinutes += 24 * 60
     }
 
-    // Format the selected date as YYYY-MM-DD for comparison with blocked slots
-    const formattedDate = selectedDate.toISOString().split("T")[0]
+    // Format the selected date as YYYY-MM-DD in local time zone
+    const formattedDate = formatLocalDate(selectedDate)
+
+    // Check if the entire day is blocked
+    const isFullDayBlocked = (restaurantStatus.blockedTimeSlots || [])
+      .some(slot => slot.date === formattedDate && slot.isFullDay === true)
+    
+    // If the entire day is blocked, return an empty array
+    if (isFullDayBlocked) {
+      return []
+    }
 
     // Get blocked time slots for the selected date
     const blockedSlots = (restaurantStatus.blockedTimeSlots || [])
-      .filter((slot) => slot.date === formattedDate)
+      .filter((slot) => slot.date === formattedDate && !slot.isFullDay)
       .map((slot) => slot.time)
 
     for (let hour = 0; hour < 24; hour++) {
@@ -231,9 +245,22 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
   // Check if selected time slot is blocked when time changes
   useEffect(() => {
     if (restaurantStatus.blockedTimeSlots && restaurantStatus.blockedTimeSlots.length > 0) {
-      const formattedDate = formData.date.toISOString().split("T")[0]
+      const formattedDate = formatLocalDate(formData.date)
+      
+      // First check if the entire day is blocked
+      const fullDayBlock = restaurantStatus.blockedTimeSlots.find(
+        (slot) => slot.date === formattedDate && slot.isFullDay === true
+      )
+      
+      if (fullDayBlock) {
+        setIsTimeSlotBlocked(true)
+        setBlockedTimeSlotReason(fullDayBlock.reason || "This day is not available for reservations")
+        return
+      }
+      
+      // If day is not fully blocked, check for specific time slot
       const blockedSlot = restaurantStatus.blockedTimeSlots.find(
-        (slot) => slot.date === formattedDate && slot.time === formData.time,
+        (slot) => slot.date === formattedDate && slot.time === formData.time
       )
 
       if (blockedSlot) {
@@ -300,6 +327,15 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
     })
     if (restaurantStatus.closedDays?.includes(dayOfWeek)) {
       newErrors.date = `${text.errors.closed} ${dayOfWeek}s`
+    }
+
+    // Check if the selected date is fully blocked
+    const formattedDate = formatLocalDate(formData.date)
+    const isFullDayBlocked = (restaurantStatus.blockedTimeSlots || [])
+      .some(slot => slot.date === formattedDate && slot.isFullDay === true)
+    
+    if (isFullDayBlocked) {
+      newErrors.date = text.errors.blockedTimeSlot
     }
 
     // Check if the selected time slot is blocked
@@ -463,17 +499,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
               </button>
             </div>
 
-            {restaurantStatus.closedDays && restaurantStatus.closedDays.includes("Wednesday") && (
-              <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
-                <div className="flex">
-                  <div className="ml-3">
-                    <p className="text-amber-400 font-medium">{text.closedDay}</p>
-                    <p className="text-sm text-amber-300">{text.closedDayMessage}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {!restaurantStatus.isOpen && (
               <div className="bg-black/40 border-l-4 border-amber-500 p-4 mb-6">
                 <div className="flex">
@@ -560,8 +585,24 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, la
                     onChange={handleDateChange}
                     minDate={new Date()}
                     className="w-full pl-10 px-3 py-2 border border-amber-400/50 rounded-md focus:ring-amber-500 focus:border-amber-500 bg-black/60 text-white"
-                    disabled={isSubmitting}
-                  />
+                    dateFormat="MMMM d, yyyy"
+                    filterDate={(date) => {
+                      // Check if the day is closed
+                      const dayOfWeek = date.toLocaleDateString(language === "en" ? "en-US" : "pt-PT", {
+                        weekday: "long",
+                      })
+                      if (restaurantStatus.closedDays?.includes(dayOfWeek)) {
+                        return false
+                      }
+                      
+                      // Check if the day is fully blocked
+                      const formattedDate = formatLocalDate(date)
+                      const isFullDayBlocked = (restaurantStatus.blockedTimeSlots || [])
+                        .some(slot => slot.date === formattedDate && slot.isFullDay === true)
+                      
+                      return !isFullDayBlocked
+                    }}
+                    />
                   {errors.date && <p className="text-amber-500 text-sm mt-1">{errors.date}</p>}
                 </div>
 
