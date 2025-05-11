@@ -15,7 +15,7 @@ const translations = {
     phone: "Phone",
     email: "Email",
     hours: "Hours",
-    closed: "WEDNESDAY CLOSED",
+    
     nameLabel: "Name",
     emailLabel: "Email",
     messageLabel: "Message",
@@ -31,7 +31,7 @@ const translations = {
     phone: "Telefone",
     email: "Email",
     hours: "Horário",
-    closed: "QUARTA-FEIRA FECHADO",
+    
     nameLabel: "Nome",
     emailLabel: "Email",
     messageLabel: "Mensagem",
@@ -180,7 +180,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
           <div>
             <h3 className="font-semibold text-white text-lg">{text.hours}</h3>
             <p className="text-gray-300">{text.schedule}</p>
-            <p className="text-amber-400 font-bold mt-1">{text.closed}</p>
+            
           </div>
         </div>
       </div>
