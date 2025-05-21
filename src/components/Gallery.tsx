@@ -6,7 +6,7 @@ interface GalleryProps {
   language: 'en' | 'pt';
 }
 
-// Define translations for the Gallery component
+
 const translations = {
   en: {
     title: "Our Gallery",
